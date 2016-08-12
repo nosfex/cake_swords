@@ -243,30 +243,57 @@ GameScreen.GrillScreen = function(game)
     bkg.anchor.y = 1;
     this.enabled = false;
     
-    this.dough = game.make.sprite(game.world.width * 0.3, game.world.height * 0.43, 'dough_grill');
-    this.add(this.dough);
-    this.dough.scale.setTo(0, 0);
+    this.dough = [ game.make.sprite(game.world.centerX * 0.75, game.world.height * 0.23, 'dough_grill'), game.make.sprite(game.world.centerX * 0.75, game.world.height * 0.23, 'dough_grill'), game.make.sprite(game.world.centerX * 0.75, game.world.height * 0.23, 'dough_grill')];
+    var i = 0;
+    for(i = 0; i < this.dough.length ; i++)
+    {
+        this.add(this.dough[i]);
+        this.dough[i].scale.setTo(0, 0);
+        this.dough[i].anchor.setTo(0.5, 0.5);    
+    }
     
-    
-    this.swordMold = game.make.sprite(game.world.width * 0.3,  game.world.height * 0.1, 'sword_mold');
+    this.swordMold = game.make.sprite(0,  game.world.height * 0.0151, 'sword_mold');
     this.add(this.swordMold);
     
-    this.axeMoldA = game.make.sprite(game.world.width * 0.3,  game.world.height * 0.1, 'axe_mold');
+    this.axeMoldA = game.make.sprite(0,  game.world.height * 0.0151, 'axe_mold');
     this.add(this.axeMoldA);
     
-    this.axeMoldB = game.make.sprite(game.world.width * 0.3,  game.world.height * 0.1, 'axe_mold_b');
+    this.axeMoldB = game.make.sprite(0,  game.world.height * 0.0151, 'axe_mold_b');
     this.add(this.axeMoldB);
-    
-    
     
     this.swordMold.visible = false;
     this.axeMoldA.visible = false;
     this.axeMoldB.visible = false;
     
+    this.game = game;
 };
+
+
 
 GameScreen.GrillScreen.prototype = Object.create(Phaser.Group.prototype);
 GameScreen.GrillScreen.constructor = GameScreen.GrillScreen;
+
+GameScreen.GrillScreen.prototype.fillMold = function(type)
+{
+    
+        console.log(type);
+    
+        var i = this.game.grillPick;
+        this.dough[i].visible = true;
+        this.game.add.tween(  this.dough[i].scale).to({x:1, y:1}, 500, Phaser.Easing.Linear.None).start();
+    
+};
+
+GameScreen.GrillScreen.prototype.checkDoughs = function()
+{
+    var i = 0; 
+    for (i = 0 ; i < this.dough.length; i++)
+    {
+        this.dough[i].visible = false;
+    }
+    if(this.game.grillPick >= 0)
+        this.dough[this.game.grillPick].visible = true;
+};
 
 GameScreen.GrillScreen.prototype.initWithMold = function(moldType)
 {
@@ -283,12 +310,12 @@ GameScreen.GrillScreen.prototype.initWithMold = function(moldType)
              console.log("swooord");
         break;
             
-        case 200:
+        case 1:
             this.axeMoldA.visible = true;
             console.log("AXEEEEE");
         break;
         
-        case 400:
+        case 2:
             this.axeMoldB.visible = true;
             console.log("AXEEEE_B");
         break;
@@ -330,6 +357,12 @@ GameScreen.GameScreen.prototype.swapScreen = function(toScreen)
   
 };
 
+GameScreen.GameScreen.prototype.checkDoughs = function()
+{
+    this.grillScreen.checkDoughs();
+    
+}
+
 
 GameScreen.GameScreen.prototype.onExitFinished = function()
 {
@@ -338,6 +371,9 @@ GameScreen.GameScreen.prototype.onExitFinished = function()
         this.grillScreen.enabled = false;
         this.game.add.tween(this.grillScreen.bkg.scale).to({x:1, y:0}, 100, Phaser.Easing.Linear.None).start();
         this.grillScreen.initWithMold("");
+        
+        this.game.grillPick = -1;
+        this.grillScreen.checkDoughs();
     }   
     else
     {
@@ -351,7 +387,7 @@ GameScreen.GameScreen.prototype.onExitFinished = function()
 
 GameScreen.GameScreen.prototype.fillWithDough = function(type)
 {
-    
+    this.grillScreen.fillMold(type);
 };
 
 //---------------------------------------------------------------------------------------
@@ -481,7 +517,7 @@ BasicGame.Game.prototype = {
         for(i = 0 ; i < 3 ; i++)
         {
             this.grills[i] = this.add.button(i * 160, this.world.centerY * 0.8, 'grill', this.grillSelected, this.grills[i]);
-            this.grills[i].id = i * 200;
+            this.grills[i].id = i;
             this.grills[i].game = this;
         }
         
@@ -504,6 +540,9 @@ BasicGame.Game.prototype = {
         {
             console.log(this.id + "id");
             this.game.lastGridId = this.id;
+            this.game.grillPick  = this.id;
+            
+            this.game.gameScreen.checkDoughs();
             this.game.showSelector();
         }
         
@@ -511,7 +550,6 @@ BasicGame.Game.prototype = {
     
     showSelector : function()
     {
-        console.log("selector RISE!");
         this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:0}, 100, Phaser.Easing.Linear.None).start();
         
         this.gameScreen.swapScreen(  this.lastGridId );
@@ -522,7 +560,7 @@ BasicGame.Game.prototype = {
     {
         this.inventory.useType(type);
         console.log("TYPE: " + type);
-        this.gameScreen.fillWithDough();
+        this.gameScreen.fillWithDough(type);
     },
     
     update: function()
