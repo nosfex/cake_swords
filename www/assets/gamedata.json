@@ -1,0 +1,17 @@
+{
+  "doughs":[
+    {"type":"normal", "name":"dough", "duration":10, "cooktimemin":10, "cooktimemax":15, "imgref":"somepng.png"},
+    {"type":"rare", "name":"cookie dough", "duration":8, "cooktimemin":20, "cooktimemax":23, "imgref":"somepng.png"},
+    {"type":"legendary", "name":"pizza dough", "duration":5, "cooktimemin":20, "cooktimemax":21, "imgref":"somepng.png"}
+    ],
+  "metals":[
+    {"type":"normal", "name":"bronze", "duration":3, "imgref":"somepng.png"},
+    {"type":"rare", "name":"silver", "duration":4, "imgref":"somepng.png"},
+    {"type":"legendary", "name":"mithrill", "duration":5, "imgref":"somepng.png"}
+    ],
+  "crystals":[
+    {"type":"normal", "name":"agate", "duration":3, "imgref":"somepng.png"},
+    {"type":"rare", "name":"amethyst", "duration":4, "imgref":"somepng.png"},
+    {"type":"legendary", "name":"diamond", "duration":5, "imgref":"somepng.png"}
+    ]
+}
