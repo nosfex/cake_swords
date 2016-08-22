@@ -113,10 +113,13 @@ GameDough.Dough = function(game, xy, sprite, type, id)
     
     this.swordData = {durability:10, type:'sword', ingredients:''};
     
-    var bmd = game.make.bitmapData(500, 200);
+    var bmd = game.make.bitmapData(350, 200);
     bmd.alphaMask('peppermint', 'dough_grill');
-    this.visual = game.make.sprite(xy.x + 160, xy.y, bmd);
+    this.visual = game.make.sprite(xy.x +50 , xy.y + 130, bmd);
+    this.visual.anchor.setTo(0.5, 0.5);
+    this.burnt = false;
     
+    this.readyToTakeout = false;
     // GH: States:
     // 0 = IDLE / 1 = COOK_SIDE_A / 2 = COOK_SIDE_B / 3 = READY
 };
@@ -128,14 +131,25 @@ GameDough.Dough.prototype.update = function()
 {
     if(this.cookStarted)
     {
+        
         this.currentCookTime += this.game.time.elapsed;
         var delta = this.currentCookTime / this.maxCookTime;
         if(delta >= 1)
         {
+            if(this.flipped)
+            {
+                this.readyToTakeout = true;
+            }
+            else this.burnt = true;
             delta = 1;
         }
         this.visual.tint = Phaser.Color.interpolateColor(0xFFFFFF, 0xFF3700, 100, 100 * delta);
-     }
+    }
+    
+    else
+    {
+        
+    }
 };
 
 tweenTint = function(obj, parent, startColor, endColor, time) {    
@@ -182,8 +196,16 @@ GameDough.Dough.prototype.onFlip = function()
 
 GameDough.Dough.prototype.onTakeout = function()
 {
-    this.game.inventory.addSword(this.swordData);
-    this.reset();
+    console.log("TAKING OUT");
+    if(this.readyToTakeout )
+    {
+        if(this.burnt) 
+        {
+            this.swordData.durability /=2;
+        }
+        this.game.inventory.addSword(this.swordData);
+        this.reset();
+    }
 };
 
 GameDough.Dough.prototype.reset = function()
@@ -192,7 +214,12 @@ GameDough.Dough.prototype.reset = function()
     this.cookStarted = false;
     this.flipped = false;
     this.storedTween = null;
+    this.burnt = false;
+    this.readyToTakeout = false;
     this.state = 0;
+    this.visual.color = 0xFFFFFF;
+    this.visual.tint = 0xFFFFFF;
+    this.visual.scale.setTo(0,0);
     this.swordData = {durability:10, type:'sword', ingredients:''};
 };
 
@@ -205,7 +232,8 @@ var GameScreen = {};
 GameScreen.BattleScreen = function(game)
 {
     Phaser.Group.call(this, game, game.world, 'BattleScreen', false, true, Phaser.Physics.ARCADE);
-    this.add(game.make.sprite(0, game.world.height * 0.0151, 'battle_screen_bkg'));
+    var bb = this.add(game.make.sprite(0, game.world.height * 0.0151, 'battle_screen_bkg'));
+    bb.visible = false;
 };
 
 GameScreen.BattleScreen.prototype = Object.create(Phaser.Group.prototype);
@@ -215,7 +243,7 @@ GameScreen.GrillScreen = function(game)
 {
     Phaser.Group.call(this, game, game.world, 'GrillScreen', false, true, Phaser.Physics.ARCADE);
     
-    var bkg = game.make.sprite(0, game.world.height * 0.43, 'grill_screen_bkg');
+    var bkg = game.make.sprite(0, game.world.height , 'grill_screen_bkg');
     this.add(bkg);
     this.bkg = bkg; 
     bkg.anchor.y = 1;
@@ -251,7 +279,6 @@ GameScreen.GrillScreen = function(game)
   
     this.game = game;
 };
-
 
 GameScreen.GrillScreen.prototype = Object.create(Phaser.Group.prototype);
 GameScreen.GrillScreen.constructor = GameScreen.GrillScreen;
@@ -295,7 +322,9 @@ GameScreen.GrillScreen.prototype.checkDoughs = function()
         this.dough[i].visual.visible = false;
     }
     if(this.game.grillPick >= 0)
+    {
         this.dough[this.game.grillPick].visual.visible = true;
+    }
 };
 
 GameScreen.GrillScreen.prototype.initWithMold = function(moldType)
@@ -318,7 +347,7 @@ GameScreen.GrillScreen.prototype.flipDough = function(id)
 GameScreen.GrillScreen.prototype.takeout = function(id)
 {
     console.log('take out this grill: ' + id );
-    this.dough[id].onFlip();
+    this.dough[id].onTakeout();
 };
 
 GameScreen.GameScreen = function(game)
@@ -392,7 +421,7 @@ Inventory = function(game)
     this.doughs = [{name:"Barro", count:10}, {name:"Caramelo", count:0}, {name:"Legamo", count:0}, {name:"Grumosa", count:0}, {name:"Ancestral", count:0}];
     
     this.gems = [{name:"Alambre", count:10}, {name:"HojasdeHierro", count:0}, {name:"DientesdeObsidiana", count:0},{name:"CalzoncillosdeAcero", count:0}, {name:"EscamasdeDragon", count:10}];
-    this.currentSword = ['','', ''];
+    this.currentSword = [{a:'', ad:0 , b:'', bd: 0}, {a:'', ad:0 , b:'', bd: 0},{a:'', ad:0 , b:'', bd: 0},];
 };
 
 Inventory.prototype =
@@ -406,7 +435,8 @@ Inventory.prototype =
             if(this.doughs[i].name === type)
             {
                 key = this.doughs[i];
-                this.currentSword[currentGrill] += key.name;
+                this.currentSword[currentGrill].a = key.name;
+                this.currentSword[currentGrill].ad = key.count;
                 this.doughs[i].count--;
                 break;
             }
@@ -419,29 +449,96 @@ Inventory.prototype =
                 if(this.gems[i].name === type)
                 {
                     key = this.gems[i];
-                    this.currentSword[currentGrill] += " , " + skey.name;
+                    this.currentSword[currentGrill].b    = key.name;
+                    this.currentSword[currentGrill].bd   = key.count;
                     this.gems[i].count--;
                     break;
                 }
             }
         }
     },
-    
+  
     addSword: function(obj)
     {
-        
         var materials = this.currentSword[currentGrill];
-        var d = this.getDuration(materials.split(" , ")[0]);
-        var g = this.getDuration(materials.split(" , ")[1]);
+        console.log("DEBUG MATERIALS: " + materials + this.currentSword[currentGrill]);
+        var d = materials.ad;
+        var g = materials.bd;
         
         var finalDuration = g + d + obj.durability;    
         
         obj.durability = finalDuration;
-        this.game.swordQueue.addSword(obj);
+        this.game.swordQueue.addSword(obj);   
     }
 };
 
 Inventory.prototype.constructor = Inventory;
+
+//---------------------------------------------------------------------------------------
+//  GH: Clock 
+//---------------------------------------------------------------------------------------
+
+var Clock = {};
+
+Clock.Clock = function(game, id, xy, sprite, needle, green)
+{
+    Phaser.Sprite.call(this, game, xy.x, xy.y, sprite);
+    this.game = game;
+    
+    this.needle = game.make.sprite(this.width * 0.5, this.height * 0.5, needle);
+    this.greenCorner = game.make.sprite(this.width * 0.5, this.height * 0.5, green);
+    this.needle.anchor.setTo(0.5, 0.65);
+    this.greenCorner.anchor.setTo(0, 1);
+    this.addChild(this.greenCorner);
+    this.addChild(this.needle);
+    
+    this.timeToCook = 0;
+    this.maxTime =  12000;
+    this.currentTime = 0;
+    this.id = id;
+};
+
+Clock.Clock.prototype = Object.create(Phaser.Sprite.prototype);
+Clock.Clock.prototype.constructor = Clock.Clock;
+
+Clock.Clock.prototype.update = function()
+{
+    var dough = this.game.gameScreen.grillScreen.dough[this.id];
+    if(dough.cookStarted)
+    {
+        this.timeToCook = dough.maxCookTime;
+        this.currentTime = dough.currentCookTime;
+        this.needle.angle = (this.currentTime / this.timeToCook) * 360;
+        this.greenCorner.angle = (this.timeToCook / this.maxTime) * 360;
+        this.greenCorner.visible = true;
+    }
+    else
+    {
+        this.greenCorner.visible = false;
+    }
+};
+
+Clock.ClockGroup = function(game) 
+{
+    Phaser.Group.call(this, game, game.world, 'Clock', false, true, Phaser.Physics.ARCADE);
+    this.game = game;
+    
+    var i = 0; 
+    var xy = {x:0, y:0};
+    for(i = 0 ; i < 3 ; i ++)
+    {
+        xy.x = 80 + i * 160;
+        xy.y = game.world.height * 0.7;
+        var clock = new Clock.Clock(game, i, xy, 'clock_canvas', 'clock_needle', 'clock_green');
+        
+        this.add(clock);
+        
+    }
+};
+
+Clock.ClockGroup.prototype = Object.create(Phaser.Group.prototype);
+Clock.ClockGroup.prototype.constructor = Clock.ClockGroup;
+    
 
 //---------------------------------------------------------------------------------------
 //  GH: Sword Queue
@@ -449,16 +546,21 @@ Inventory.prototype.constructor = Inventory;
 
 var SwordQueue = {};
 
-SwordQueue = function()
+SwordQueue = function(game)
 {
-    
+    Phaser.Group.call(this, game, game.world, 'SwordQueue', false, true, Phaser.Physics.ARCADE);
+    this.swords = 0;
+    this.game = game;
 };
 
 SwordQueue.prototype =  Object.create(Phaser.Group.prototype);
 SwordQueue.prototype.constructor = SwordQueue;
 
-
-
+SwordQueue.prototype.addSword = function(obj)
+{
+    this.swords++;
+    this.game.stackText.text = this.swords.toString();
+};
 
 //---------------------------------------------------------------------------------------
 //  GH: Game menus & flow
@@ -515,20 +617,22 @@ BasicGame.Game.prototype = {
         this.load.spritesheet('button', 'assets/button_sprite_sheet_crapped.png', 193, 71);
         this.load.json('gamedata', 'assets/gamedata.json');
         // GH: Grill mold
-        this.load.image('sword_mold', 'assets/espada_molde.png');
-        this.load.image('axe_mold', 'assets/hacha_molde.png');
-        this.load.image('axe_mold_b', 'assets/hacha_molde_b.png');
+        this.load.image('sword_mold', 'assets/molde_sword.png');
+        this.load.image('axe_mold', 'assets/molde_axe.png');
+        this.load.image('axe_mold_b', 'assets/molde_mace.png');
         // GH: Grill dough
         this.load.image('dough_grill', 'assets/circle_dough.png');
         // GH: Selector
         this.load.image('circle_container', 'assets/circle_container.png');
-        this.load.image('dough_container', 'assets/dough_container.png');
+        this.load.image('dough_container', 'assets/gui_itemsbar_container.png');
         this.load.spritesheet('dough_test', 'assets/masa_1.png', 64,64);
         // GH: Grills
-        this.load.image('grill', 'assets/grill.png');
+        this.load.image('grill_sword', 'assets/grillicon_sword.png');
+        this.load.image('grill_axe', 'assets/grillicon_axe.png');
+        this.load.image('grill_mace', 'assets/grillicon_mace.png');
         // GH: Screens
-        this.load.image('battle_screen_bkg', 'assets/battle_screen.png');
-        this.load.image('grill_screen_bkg', 'assets/grill_screen.png');
+        this.load.image('battle_screen_bkg', 'assets/grill_whole.png');
+        this.load.image('grill_screen_bkg', 'assets/grill_whole.png');
         // GH: Battle screen return
         this.load.image('sword_btn', 'assets/sword.png');
         // GH: gems
@@ -537,40 +641,72 @@ BasicGame.Game.prototype = {
         // GH: Flip 
         this.load.image('flip', 'assets/flip.png');
         this.load.image('peppermint', 'assets/peppermint.jpg');
+        
+        // GH: Clock
+        this.load.image('clock_canvas', 'assets/clock/clock_canvas.png');
+        this.load.image('clock_green', 'assets/clock/clock_green.png');
+        this.load.image('clock_needle', 'assets/clock/clock_needle.png');
+        
+        // GH: Weaponstack
+        this.load.image('weaponstack_icon', 'assets/weapon_stack/weaponstack_swordplaceholder.png');
+        this.load.image('weaponstack_container', 'assets/weapon_stack/weaponstack_container.png');
+        
+        this.load.image('bkg', 'assets/at_bg.png');
     },
 
     // GH: Create all stuff
-    create: function () 
+    create: function()
     {
         // GH: Grab the json
         var phaserJSON = this.cache.getJSON('gamedata');
         this.add.group(this.mold);
         this.inventory = new Inventory(this);
+        
+        this.add.sprite(0, 0, 'bkg');
         // GH: Dough container
         this.doughContainer = new Selector.DoughSelector(this);
         this.add.group(this.doughContainer);
         this.doughContainer.position.x = this.world.centerX;
         this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:this.world.height }, 100, Phaser.Easing.Linear.None).start();
         // GH: Grills setup
-        this.grills = [null, null, null];
-        var i = 0;
-        for(i = 0 ; i < 3 ; i++)
-        {
-            this.grills[i] = this.add.button(i * 160, this.world.centerY * 0.8, 'grill', this.grillSelected, this.grills[i]);
-            this.grills[i].id = i;
-            this.grills[i].game = this;
-        }
+      
         // GH: GameScreen setup
         this.gameScreen = new GameScreen.GameScreen(this);
         this.add.group(this.gameScreen);
         this.lastGridId = ""; 
         // GH: ui buttons / battle
-        this.add.button(this.world.width * 0.7, 0, 'sword_btn', this.showBattleScreen, this);
+      //  this.add.button(this.world.width * 0.7, 0, 'sword_btn', this.showBattleScreen, this);
         // GH: Flip
         this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.3, 'flip', this.flipDough, this);
         this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.5, 'takeout', this.takeout, this);
+        this.takeoutButton.visible = false;
+    
+       
+        
+        this.swordQueue = new SwordQueue(this);
+        this.add.group(this.swordQueue);
+        
+        this.add.sprite(this.world.width * 0.9,  this.world.height * 0, 'weaponstack_container' );
+        this.add.sprite(this.world.width * 0.9,  this.world.height * 0, 'weaponstack_icon' );
+        var style = { font: "32px Arial", fill: "#ffffff", wordWrap: true, wordWrapWidth: 200, align: "center", backgroundColor: "#000000"};
+        this.stackText = this.add.text(this.world.width * 0.9,  this.world.height * 0, "0", style);
+        
+        this.grills = [null, null, null];
+        var grillid = ['grill_sword', 'grill_axe', 'grill_mace'];
+        var i = 0;
+        for(i = 0 ; i < 3 ; i++)
+        {
+            this.grills[i] = this.add.button((80) + i * 160, this.world.height * 0.66, grillid[i], this.grillSelected, this.grills[i]);
+            this.grills[i].id = i;
+            this.grills[i].game = this;
+        }
+        
+        this.clockGroup = new Clock.ClockGroup(this);
+        this.add.group(this.clockGroup);
+      
     },
     
+
     takeout : function()
     {
         // GH: set up the fucking doughs to be taken out
@@ -641,18 +777,17 @@ BasicGame.Game.prototype = {
     update: function()
     {
         this.flipButton.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
+        this.takeoutButton.visible = this.gameScreen.grillScreen.dough[currentGrill].readyToTakeout;
     },
     
     gameResized: function (width, height) 
     {
     }
-
 };
 
 BasicGame.Options = function(game)
 {
     this.game = game;
-    
     this.leftArrow  = null;
     this.rightArrow = null;
     this.playButton = null;
@@ -753,7 +888,6 @@ BasicGame.Options.prototype = {
         this.audioText.text = (Math.ceil(this.game.userVolume * 10 )).toString();
     },
     
-    
     gameResized: function (width, height) 
     {
         // This could be handy if you need to do any extra processing if the 
@@ -761,9 +895,7 @@ BasicGame.Options.prototype = {
         // orientation on a device or resizing the browser window. Note that 
         // this callback is only really useful if you use a ScaleMode of RESIZE 
         // and place it inside your main game state.
-
     }
-
 };
 
 BasicGame.EndGame = function(game)
@@ -819,7 +951,6 @@ BasicGame.EndGame.prototype = {
     create: function () 
     {
         this.menuButton = this.add.button(this.world.centerX, this.world.centerY * 0.8, 'button', this.onMenuButton, this, 2, 1, 0);
-        
         this.menuButton.position.x -= this.menuButton.width * 0.5;
     },
     
@@ -895,8 +1026,9 @@ BasicGame.Menu.prototype = {
 
         // Here we load the assets required for our preloader (in this case a 
         // background and a loading bar)
-        this.load.image('logo', 'assets/fionna_cake.png');
-        this.load.spritesheet('button', 'assets/button_sprite_sheet_crapped.png', 193, 71);
+        this.load.image('logo', 'assets/main_scr_bkg.png');
+        this.load.spritesheet('play_button', 'assets/icons_spritesheet_play.png', 128, 128);
+        this.load.spritesheet('music_button', 'assets/icons_spritesheet_musicon.png', 128, 128);
         
     },
 
@@ -911,19 +1043,20 @@ BasicGame.Menu.prototype = {
         this.logo.anchor.setTo(0.5, 0.5);
         
         // GH: Play button setup
-        this.playButton = this.add.button(this.world.centerX, this.world.centerY * 0.8, 'button', this.onPlayButton, this, 2, 1, 0);
+        this.playButton = this.add.button(this.world.width * 0.35, this.world.centerY * 1.1, 'play_button', this.onPlayButton, this, 2, 1, 0);
         
         this.playButton.position.x -= this.playButton.width * 0.5;
     
         // GH: optionsButton setup
-        this.optionsButton = this.add.button(this.world.centerX, this.world.centerY * 1.1, 'button', this.onOptionsButton, this, 2, 1, 0);
+        this.optionsButton = this.add.button(this.world.width * 0.7, this.world.centerY * 1.1, 'music_button', this.onOptionsButton, this, 2, 1, 0);
         
         this.optionsButton.position.x -= this.optionsButton.width * 0.5;
     },
       
     onOptionsButton : function()
     {
-        this.game.state.start("Options");
+        //this.game.state.start("Options");
+        this.game.userVolume = this.game.userVolume == 0 ? 1  : 0;
     },
     
     onPlayButton :function()
