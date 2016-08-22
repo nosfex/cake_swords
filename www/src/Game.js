@@ -1,178 +1,5 @@
 //---------------------------------------------------------------------------------------
-// GH: Mold programming
-//---------------------------------------------------------------------------------------
-var BaseMold = 
-{
-    
-};
-
-BaseMold.Sword = function(game, sprite)
-{
-    Phaser.Sprite.call(this, game, 0, 0, sprite );
-    this.type = 'Sword';
-    this.selected = false;
-};
-
-BaseMold.Sword.prototype = Object.create(Phaser.Sprite.prototype);
-BaseMold.Sword.prototype.constructor = BaseMold.Sword;
-
-BaseMold.Axe = function(game, sprite)
-{
-    Phaser.Sprite.call(this, game, 0, 0, sprite );
-    this.type = 'Axe';
-    this.selected = false;
-};
-
-BaseMold.Axe.prototype = Object.create(Phaser.Sprite.prototype);
-BaseMold.Axe.prototype.constructor = BaseMold.Axe;
-
-BaseMold.Sabre = function(game, sprite)
-{
-    Phaser.Sprite.call(this, game, 0, 0, sprite );
-    this.type = 'Sabre';
-    this.selected = false;
-};
-
-BaseMold.Sabre.prototype = Object.create(Phaser.Sprite.prototype);
-BaseMold.Sabre.prototype.constructor = BaseMold.Sabre;
-/*
-var Heater = {};
-
-Heater.MoldGroup = function(game)
-{
-    Phaser.Group.call(this, game, game.world, 'Heater', false, true, Phaser.Physics.ARCADE);
-    
-    this.game = game;
-    this.add(new BaseMold.Sword(game, 'sword_mold'), true);
-    this.add(new BaseMold.Axe(game, 'axe_mold'), true);
-    this.add(new BaseMold.Sabre(game, 'axe_mold_b'), true);
-    
-    this.childrenPositionY = [ game.world.height * 0, game.world.height * 0.25, game.world.height * 0.5];
-    
-    for(var i = 0; i < 3; i++)
-    {
-        this.getChildAt(i).position.y = this.childrenPositionY[i];
-        this.setTweens(this.getChildAt(i), i);
-    }
-    
-    // GH: Swipe controls
-    this.swipe = new Swipe(this.game);
-    this.selectedType = this.getChildAt(1).type;
-    return this;
-};
-
-Heater.MoldGroup.prototype = Object.create(Phaser.Group.prototype);
-Heater.MoldGroup.prototype.constructor = Heater.MoldGroup;
-
-Heater.MoldGroup.prototype.update = function()
-{
-    var direction = this.swipe.check();
-    if(direction !== null)
-    {
-        switch(direction.direction)
-        {
-            case this.swipe.DIRECTION_UP:           
-                this.changeSelection(1);
-                break;
-            case this.swipe.DIRECTION_DOWN:
-                this.changeSelection(-1);
-                break;
-        }
-    }
-    
-    var i = this.children.length;
-
-    while (i--)
-    {
-        this.children[i].update();
-    }
-};
-
-Heater.MoldGroup.prototype.setTweens = function(child, newPosY)
-{
-    var tween = this.game.add.tween(child.position);
-    var tweenScale = this.game.add.tween(child.scale);
-    var upscale = 1;
-    if(newPosY == 1)
-    {
-        upscale = 1.4;
-    }
-    else this.moveDown(child);
-    
-    tweenScale.to({x:upscale, y:upscale}, 100, Phaser.Easing.Linear.None);
-    tweenScale.start();
-
-    tween.to({x:0 , y:this.childrenPositionY[ newPosY] }, 100, Phaser.Easing.Linear.None);
-    tween.start();
-    
-    //this.customSort(function(a,b){ if(a.scale < b.scale)return-1; else { return 1;}}, this);
-};
-
-Heater.MoldGroup.prototype.changeSelection = function (direction)
-{
-    var i = 0;
-    var j = 0;
-    if(direction == 1)
-    {
-        //this.getChildAt(0).position.y = this.childrenPositionY[2];
-        i = 0;
-        j = 0;
-        for(i = 0; i < this.children.length; i++)
-        {
-            for(j = 0; j < this.childrenPositionY.length; j++)
-            {
-                if(this.getChildAt(i).position.y == this.childrenPositionY[j])
-                {
-                    
-                    var newPos = j - direction;
-                    if (newPos < 0 )
-                    {
-                        newPos = this.childrenPositionY.length - 1;
-                    }
-                    this.setTweens(this.getChildAt(i),newPos);
-                    
-                    break;
-                }
-            }
-        }
-    }
-    else
-    {
-        i = 0;
-        j = this.childrenPositionY.length - 1;
-        for(i = 0; i < this.children.length; i++)
-        {
-            for(j = this.childrenPositionY.length - 1; j >= 0; j--)
-            {
-                if(this.getChildAt(i).position.y == this.childrenPositionY[j])
-                {
-                    
-                    var newPos = j + 1;
-                    if (newPos > this.childrenPositionY.length - 1)
-                    {
-                        newPos = 0;
-                    }
-                    this.setTweens(this.getChildAt(i),newPos);
-                    break;
-                }
-            }
-        }    
-        
-    }
-    i = 0;
-    for(i = 0; i < this.children.length; i++)
-    {
-        if(this.getChildAt(i).position.y == this.childrenPositionY[1])
-        {
-            this.selectedType = this.getChildAt(i).type;
-            break;
-        }
-    }
-};*/
-//---------------------------------------------------------------------------------------
-
-//---------------------------------------------------------------------------------------
-// GH: Dough programming
+// GH: Selector Data
 //---------------------------------------------------------------------------------------
 
 var Selector = {};
@@ -182,32 +9,70 @@ Selector.DoughSelector = function(game)
     Phaser.Group.call(this, game, game.world, 'DoughSelector', false, true, Phaser.Physics.ARCADE);
     this.game = game;
     var i = 0;
+    this.fillWithCategory('doughs', game);
     
-    var bkg = game.make.sprite(game.world.width * 0.4, game.world.height * 0.1 , 'dough_container');
-    this.add(bkg, true);
-    for(i = 0 ; i < game.inventory.doughs.length ; i++)
-    {
-        var xy = {x:game.world.width * 0.4, y:game.world.height * 0.1 + (60 * i)};
-        console.log("xy: " + xy.x + " " + xy.y);
-        var d = new BaseDough.Dough(game, xy, 'dough_test', game.inventory.doughs[i]);
-        console.log(d.type + " " + game.inventory.doughs[i] );
-        this.add(d, true);
-        this.add(game.make.button(xy.x, xy.y, 'dough_test', function() { this.game.useType(this.type);}, d, 0, 1, 2,3));
-    }
     return this;
 };
 
 Selector.DoughSelector.prototype = Object.create(Phaser.Group.prototype);
 Selector.DoughSelector.prototype.constructor = Selector.DoughSelector;
 
+Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
+{
+    this.removeAll();
+    var bkg = game.make.sprite(game.world.width * 0.4, game.world.height * 0.1 , 'dough_container');
+    this.add(bkg, true);
+    var xy = {x:game.world.width * 0.4, y:0};
+    
+    var key = {};
+    var i = 0;
+    switch(category)
+    {
+        case 'doughs':
+            
+            for(i = 0 ; i < game.inventory.doughs.length ;i++)
+            {
+             
+                key = game.inventory.doughs[i];
+                if(key.count > 0)
+                {
+                    xy.y = game.world.height * 0.1 + (60 * i);
+                    this.setupButtons('dough_test', xy, key.name);
+                }
+            }
+            break;
+        case 'gems':
+            for(i = 0 ; i < game.inventory.gems.length ;i++)
+            {
+                key = game.inventory.gems[i];
+              
+                if(key.count > 0)
+                {
+                    xy.y = game.world.height * 0.1 + (60 * i);
+                    this.setupButtons('gems', xy, key.name);
+                }
+            }
+            break;
+    }
+};
 
-var BaseDough = 
+Selector.DoughSelector.prototype.setupButtons = function(spriteID, xy, type)
+{
+    var d = new UIBaseDough.Dough(this.game, xy,spriteID, type);
+    this.add(d, true);
+    this.add(this.game.make.button(xy.x, xy.y,spriteID, function() { this.game.useType(this.type);}, d, 0, 1, 2,3));
+};
+
+//---------------------------------------------------------------------------------------
+// GH: UIDough data
+//---------------------------------------------------------------------------------------
+
+var UIBaseDough = 
 {
     
 };
 
-
-BaseDough.Dough = function(game, xy, sprite, type)
+UIBaseDough.Dough = function(game, xy, sprite, type)
 {
     Phaser.Sprite.call(this, game, xy.x, xy.y, 'circle_container');
     
@@ -217,21 +82,134 @@ BaseDough.Dough = function(game, xy, sprite, type)
     this.addChild(this.text);
 };
 
-BaseDough.Dough.prototype = Object.create(Phaser.Sprite.prototype);
-BaseDough.Dough.prototype.constructor = BaseDough.Dough;
+UIBaseDough.Dough.prototype = Object.create(Phaser.Sprite.prototype);
+UIBaseDough.Dough.prototype.constructor = UIBaseDough.Dough;
+
+//---------------------------------------------------------------------------------------
+// GH: Real Dough Data
+//---------------------------------------------------------------------------------------
+
+var GameDough = 
+{
+};
+
+GameDough.Dough = function(game, xy, sprite, type, id)
+{
+    Phaser.Sprite.call(this, game, xy.x, xy.y, sprite);
+    console.log("Dough: " + this.toString());
+    console.log("DoughSprite: " + sprite);
+    this.game = game;
+    this.type = type;
+    
+    this.id = id;
+    
+    // GH: Data dependant from type
+    this.maxCookTime = 5000;
+    this.currentCookTime = 0;
+    this.cookStarted = false;
+    this.flipped = false;
+    this.storedTween = null;
+    this.state = 0;
+    
+    this.swordData = {durability:10, type:'sword', ingredients:''};
+    
+    var bmd = game.make.bitmapData(500, 200);
+    bmd.alphaMask('peppermint', 'dough_grill');
+    this.visual = game.make.sprite(xy.x + 160, xy.y, bmd);
+    
+    // GH: States:
+    // 0 = IDLE / 1 = COOK_SIDE_A / 2 = COOK_SIDE_B / 3 = READY
+};
+
+GameDough.Dough.prototype = Object.create(Phaser.Sprite.prototype);
+GameDough.Dough.prototype.constructor = GameDough.Dough;
+
+GameDough.Dough.prototype.update = function()
+{
+    if(this.cookStarted)
+    {
+        this.currentCookTime += this.game.time.elapsed;
+        var delta = this.currentCookTime / this.maxCookTime;
+        if(delta >= 1)
+        {
+            delta = 1;
+        }
+        this.visual.tint = Phaser.Color.interpolateColor(0xFFFFFF, 0xFF3700, 100, 100 * delta);
+     }
+};
+
+tweenTint = function(obj, parent, startColor, endColor, time) {    
+    // create an object to tween with our step value at 0    
+    var colorBlend = {step: 0};    
+    // create the tween on this object and tween its step property to 100    
+    var colorTween = obj.game.add.tween(colorBlend).to({step: 100}, time);        
+    // run the interpolateColor function every time the tween updates, feeding it the    
+    // updated value of our tween each time, and set the result as our tint   
+    colorTween.onUpdateCallback(function() {      
+        obj.tint = Phaser.Color.interpolateColor(startColor, endColor, 100, colorBlend.step);      
+    });
+    // set the object to the start color straight away    
+    obj.tint = startColor;            
+    // start the tween    
+    colorTween.start();
+    parent.storedTween = colorTween;
+    
+};
+
+GameDough.Dough.prototype.onFillEnd = function()
+{  
+    this.state = 1;
+    this.game.showSelector(this.id, false);
+};
+
+GameDough.Dough.prototype.startCooking = function()
+{
+    this.cookStarted = true;  
+    this.state = 2;
+    this.currentCookTime = 0;
+};
+
+GameDough.Dough.prototype.onFlip = function()
+{
+    if(this.flipped === false)
+    {
+        this.currentCookTime = 0;
+        console.log("AT DOUGH FLIPs");
+        this.flipped = true;  
+        this.visual.tint = 0xFFFFFF;
+    }         
+};
+
+GameDough.Dough.prototype.onTakeout = function()
+{
+    this.game.inventory.addSword(this.swordData);
+    this.reset();
+};
+
+GameDough.Dough.prototype.reset = function()
+{
+    this.currentCookTime = 0;
+    this.cookStarted = false;
+    this.flipped = false;
+    this.storedTween = null;
+    this.state = 0;
+    this.swordData = {durability:10, type:'sword', ingredients:''};
+};
+
+//---------------------------------------------------------------------------------------
+// GH: GameScreens Data
+//---------------------------------------------------------------------------------------
 
 var GameScreen = {};
 
 GameScreen.BattleScreen = function(game)
 {
     Phaser.Group.call(this, game, game.world, 'BattleScreen', false, true, Phaser.Physics.ARCADE);
-    
     this.add(game.make.sprite(0, game.world.height * 0.0151, 'battle_screen_bkg'));
 };
 
 GameScreen.BattleScreen.prototype = Object.create(Phaser.Group.prototype);
 GameScreen.BattleScreen.constructor = GameScreen.BattleScreen;
-
 
 GameScreen.GrillScreen = function(game)
 {
@@ -243,31 +221,36 @@ GameScreen.GrillScreen = function(game)
     bkg.anchor.y = 1;
     this.enabled = false;
     
-    this.dough = [ game.make.sprite(game.world.centerX * 0.75, game.world.height * 0.23, 'dough_grill'), game.make.sprite(game.world.centerX * 0.75, game.world.height * 0.23, 'dough_grill'), game.make.sprite(game.world.centerX * 0.75, game.world.height * 0.23, 'dough_grill')];
+    // GH: Create position data for doughs.
+    var xy = {x:game.world.centerX * 0.75 , y:game.world.height * 0.23 };
+    // GH: Create & setup doughs;
+    
+    this.dough = [ new GameDough.Dough(game, xy, 'dough_grill', 'bs', 0), new GameDough.Dough(game, xy, 'dough_grill', 'bs', 1), new GameDough.Dough(game, xy, 'dough_grill', 'bs', 2)];
+    
     var i = 0;
     for(i = 0; i < this.dough.length ; i++)
     {
         this.add(this.dough[i]);
-        this.dough[i].scale.setTo(0, 0);
-        this.dough[i].anchor.setTo(0.5, 0.5);    
+        this.add(this.dough[i].visual);
+        this.dough[i].visual.scale.setTo(0, 0);
+        this.dough[i].visual.anchor.setTo(0.5, 0.5);
+        this.dough[i].scale.setTo(0,0);
+        this.dough[i].anchor.setTo(0.5,0.5);
     }
     
-    this.swordMold = game.make.sprite(0,  game.world.height * 0.0151, 'sword_mold');
-    this.add(this.swordMold);
-    
-    this.axeMoldA = game.make.sprite(0,  game.world.height * 0.0151, 'axe_mold');
-    this.add(this.axeMoldA);
-    
-    this.axeMoldB = game.make.sprite(0,  game.world.height * 0.0151, 'axe_mold_b');
-    this.add(this.axeMoldB);
-    
-    this.swordMold.visible = false;
-    this.axeMoldA.visible = false;
-    this.axeMoldB.visible = false;
-    
+    // GH: Create the different grills
+    // GH: Sword
+    this.moldid = ['sword_mold', 'axe_mold', 'axe_mold_b'];
+    this.molds = [];
+    for(i = 0; i < this.moldid.length; i++)
+    {
+        this.molds[i] = game.make.sprite(0,  game.world.height * 0.0151, this.moldid[i]);
+        this.add(this.molds[i]);
+        this.molds[i].visible = false;
+    }
+  
     this.game = game;
 };
-
 
 
 GameScreen.GrillScreen.prototype = Object.create(Phaser.Group.prototype);
@@ -275,52 +258,67 @@ GameScreen.GrillScreen.constructor = GameScreen.GrillScreen;
 
 GameScreen.GrillScreen.prototype.fillMold = function(type)
 {
+    var i = this.game.grillPick;
     
-        console.log(type);
+    this.dough[i].visual.visible = true;
+    var tween = this.game.add.tween(  this.dough[i].visual.scale);
+    console.log(this.dough[i].visual);
+    tween.to({x:1, y:1}, 500, Phaser.Easing.Linear.None);
     
-        var i = this.game.grillPick;
-        this.dough[i].visible = true;
-        this.game.add.tween(  this.dough[i].scale).to({x:1, y:1}, 500, Phaser.Easing.Linear.None).start();
+    if(this.dough[i].state === 0)
+    {
+        tween.onComplete.add(this.dough[i].onFillEnd, this.dough[i]);
+        tween.start();
+    }
+    
+    if(this.dough[i].state === 1)
+    {
+        this.dough[i].startCooking();
+    }
     
 };
 
+GameScreen.GrillScreen.prototype.isGrillBeingUsed = function(id)
+{
+    if(this.dough[id].visible)
+    {
+        return this.dough[id].state;
+    }
+};
+
+// GH: Clear the doughs, then get the id and set it up
 GameScreen.GrillScreen.prototype.checkDoughs = function()
 {
     var i = 0; 
     for (i = 0 ; i < this.dough.length; i++)
     {
-        this.dough[i].visible = false;
+        this.dough[i].visual.visible = false;
     }
     if(this.game.grillPick >= 0)
-        this.dough[this.game.grillPick].visible = true;
+        this.dough[this.game.grillPick].visual.visible = true;
 };
 
 GameScreen.GrillScreen.prototype.initWithMold = function(moldType)
 {
     // GH: Select the proper mold ???
-    
-    this.swordMold.visible = false;
-    this.axeMoldA.visible = false;
-    this.axeMoldB.visible = false;
-    console.log("MOOOOLD: " + moldType);
-    switch(moldType)
+    var i = 0;
+    for(i = 0;  i < this.molds.length; i++)
     {
-        case 0:
-            this.swordMold.visible = true;
-             console.log("swooord");
-        break;
-            
-        case 1:
-            this.axeMoldA.visible = true;
-            console.log("AXEEEEE");
-        break;
-        
-        case 2:
-            this.axeMoldB.visible = true;
-            console.log("AXEEEE_B");
-        break;
-            
+        this.molds[i].visible = false;
     }
+    this.molds[currentGrill].visible = true;
+};
+
+GameScreen.GrillScreen.prototype.flipDough = function(id)
+{
+    console.log('flip shit: ' + id );
+    this.dough[id].onFlip();
+};
+
+GameScreen.GrillScreen.prototype.takeout = function(id)
+{
+    console.log('take out this grill: ' + id );
+    this.dough[id].onFlip();
 };
 
 GameScreen.GameScreen = function(game)
@@ -336,9 +334,8 @@ GameScreen.GameScreen = function(game)
     this.add(this.battleScreen);
     this.add(this.grillScreen);
     
-    this.game.add.tween(this.grillScreen.bkg.scale).to({x:1, y:0}, 100, Phaser.Easing.Linear.None).start();
-    
     this.pendingScreen = "";
+    this.atScreen = "battle";
 };
 
 GameScreen.GameScreen.prototype = Object.create(Phaser.Group.prototype);
@@ -346,23 +343,19 @@ GameScreen.GameScreen.constructor = GameScreen.GameScreen;
 
 GameScreen.GameScreen.prototype.swapScreen = function(toScreen)
 {
-    
     if(this.pendingScreen !== "")
         return;
-    this.pendingScreen = toScreen;
+    this.atScreen = this.pendingScreen = toScreen;
     var tween = this.game.add.tween(this.grillScreen.bkg.scale);
     tween.to({x:1, y:0}, 100, Phaser.Easing.Linear.None);
     tween.onComplete.add(this.onExitFinished, this);
-    tween.start();
-  
+    tween.start(); 
 };
 
 GameScreen.GameScreen.prototype.checkDoughs = function()
 {
-    this.grillScreen.checkDoughs();
-    
-}
-
+    this.grillScreen.checkDoughs();  
+};
 
 GameScreen.GameScreen.prototype.onExitFinished = function()
 {
@@ -371,7 +364,6 @@ GameScreen.GameScreen.prototype.onExitFinished = function()
         this.grillScreen.enabled = false;
         this.game.add.tween(this.grillScreen.bkg.scale).to({x:1, y:0}, 100, Phaser.Easing.Linear.None).start();
         this.grillScreen.initWithMold("");
-        
         this.game.grillPick = -1;
         this.grillScreen.checkDoughs();
     }   
@@ -381,7 +373,6 @@ GameScreen.GameScreen.prototype.onExitFinished = function()
         this.grillScreen.enabled = true;
         this.grillScreen.initWithMold(this.pendingScreen);
     }
-    
     this.pendingScreen = "";
 };
 
@@ -397,40 +388,92 @@ GameScreen.GameScreen.prototype.fillWithDough = function(type)
 var Inventory = {};
 Inventory = function(game)
 {
-    this.game = game;
-    this.doughs = ["Barro", "Caramelo", "Legamo", "Grumosa", "Ancestral"];
+    this.game   = game;
+    this.doughs = [{name:"Barro", count:10}, {name:"Caramelo", count:0}, {name:"Legamo", count:0}, {name:"Grumosa", count:0}, {name:"Ancestral", count:0}];
+    
+    this.gems = [{name:"Alambre", count:10}, {name:"HojasdeHierro", count:0}, {name:"DientesdeObsidiana", count:0},{name:"CalzoncillosdeAcero", count:0}, {name:"EscamasdeDragon", count:10}];
+    this.currentSword = ['','', ''];
+};
+
+Inventory.prototype =
+{
+    useType: function(type)
+    {
+        var i = 0; 
+        var key = null;
+        for(i = 0; i < this.doughs.length ; i++)
+        {
+            if(this.doughs[i].name === type)
+            {
+                key = this.doughs[i];
+                this.currentSword[currentGrill] += key.name;
+                this.doughs[i].count--;
+                break;
+            }
+        }
+        
+        if(key === null)
+        {
+            for(i = 0; i < this.doughs.length ; i++)
+            {
+                if(this.gems[i].name === type)
+                {
+                    key = this.gems[i];
+                    this.currentSword[currentGrill] += " , " + skey.name;
+                    this.gems[i].count--;
+                    break;
+                }
+            }
+        }
+    },
+    
+    addSword: function(obj)
+    {
+        
+        var materials = this.currentSword[currentGrill];
+        var d = this.getDuration(materials.split(" , ")[0]);
+        var g = this.getDuration(materials.split(" , ")[1]);
+        
+        var finalDuration = g + d + obj.durability;    
+        
+        obj.durability = finalDuration;
+        this.game.swordQueue.addSword(obj);
+    }
+};
+
+Inventory.prototype.constructor = Inventory;
+
+//---------------------------------------------------------------------------------------
+//  GH: Sword Queue
+//---------------------------------------------------------------------------------------
+
+var SwordQueue = {};
+
+SwordQueue = function()
+{
     
 };
 
-Inventory.prototype = {
-    useType: function(type)
-    {
-        
-    }
-    
-};
-Inventory.prototype.constructor = Inventory;
+SwordQueue.prototype =  Object.create(Phaser.Group.prototype);
+SwordQueue.prototype.constructor = SwordQueue;
+
+
 
 
 //---------------------------------------------------------------------------------------
 //  GH: Game menus & flow
 //---------------------------------------------------------------------------------------
-
+var currentGrill  = 0;
 // create BasicGame Class
-var BasicGame = {
-
-};
-
+var BasicGame = {};
 
 BasicGame.Game = function(game)
-{
+{    
     this.game = game;
 };
 
 BasicGame.Game.prototype = {
-
-    init: function () 
-    {
+    init: function () {
         // set up input max pointers
         this.input.maxPointers = 1;
         // set up stage disable visibility change
@@ -471,47 +514,44 @@ BasicGame.Game.prototype = {
     {
         this.load.spritesheet('button', 'assets/button_sprite_sheet_crapped.png', 193, 71);
         this.load.json('gamedata', 'assets/gamedata.json');
-        
         // GH: Grill mold
         this.load.image('sword_mold', 'assets/espada_molde.png');
         this.load.image('axe_mold', 'assets/hacha_molde.png');
         this.load.image('axe_mold_b', 'assets/hacha_molde_b.png');
-        
         // GH: Grill dough
         this.load.image('dough_grill', 'assets/circle_dough.png');
-        
         // GH: Selector
         this.load.image('circle_container', 'assets/circle_container.png');
         this.load.image('dough_container', 'assets/dough_container.png');
         this.load.spritesheet('dough_test', 'assets/masa_1.png', 64,64);
-        
         // GH: Grills
         this.load.image('grill', 'assets/grill.png');
-        
         // GH: Screens
         this.load.image('battle_screen_bkg', 'assets/battle_screen.png');
         this.load.image('grill_screen_bkg', 'assets/grill_screen.png');
-        
         // GH: Battle screen return
         this.load.image('sword_btn', 'assets/sword.png');
+        // GH: gems
+        this.load.spritesheet('gems', 'assets/gems_test.png', 32, 32);
+        this.load.image('takeout', 'assets/takeout.png');
+        // GH: Flip 
+        this.load.image('flip', 'assets/flip.png');
+        this.load.image('peppermint', 'assets/peppermint.jpg');
     },
 
+    // GH: Create all stuff
     create: function () 
     {
+        // GH: Grab the json
         var phaserJSON = this.cache.getJSON('gamedata');
-         
-        this.time.events.add(Phaser.Timer.SECOND * 4, this.backToMain, this);    
-      //  this.mold = new Heater.MoldGroup(this);
         this.add.group(this.mold);
-        
         this.inventory = new Inventory(this);
-        
+        // GH: Dough container
         this.doughContainer = new Selector.DoughSelector(this);
         this.add.group(this.doughContainer);
         this.doughContainer.position.x = this.world.centerX;
-        
         this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:this.world.height }, 100, Phaser.Easing.Linear.None).start();
-        
+        // GH: Grills setup
         this.grills = [null, null, null];
         var i = 0;
         for(i = 0 ; i < 3 ; i++)
@@ -520,58 +560,87 @@ BasicGame.Game.prototype = {
             this.grills[i].id = i;
             this.grills[i].game = this;
         }
-        
+        // GH: GameScreen setup
         this.gameScreen = new GameScreen.GameScreen(this);
         this.add.group(this.gameScreen);
         this.lastGridId = ""; 
-        
+        // GH: ui buttons / battle
         this.add.button(this.world.width * 0.7, 0, 'sword_btn', this.showBattleScreen, this);
+        // GH: Flip
+        this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.3, 'flip', this.flipDough, this);
+        this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.5, 'takeout', this.takeout, this);
     },
     
+    takeout : function()
+    {
+        // GH: set up the fucking doughs to be taken out
+        this.gameScreen.grillScreen.takeout(currentGrill);
+    },
+    
+    flipDough : function()
+    {
+        console.log("FLIPDOUGHID; " + currentGrill);
+        this.gameScreen.grillScreen.flipDough(currentGrill);
+    },
+    
+    // GH: Just swap screens to battle
     showBattleScreen : function()
     {
         this.gameScreen.swapScreen("battle");
     },
     
+    // GH: Select grid
     grillSelected :function()
     {
-        
-        if(  this.game.lastGridId == "")
+        // GH: Are we clear to use a grid?
+        if(this.game.lastGridId === "")
         {
-            console.log(this.id + "id");
+            // GH: Set the ids
             this.game.lastGridId = this.id;
             this.game.grillPick  = this.id;
-            
             this.game.gameScreen.checkDoughs();
-            this.game.showSelector();
+            // GH: Show the selector
+            console.log(this.id + " GRILL ID" );
+            currentGrill = this.id;
+            this.game.showSelector(this.id, true);
         }
-        
     },
     
-    showSelector : function()
-    {
-        this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:0}, 100, Phaser.Easing.Linear.None).start();
-        
-        this.gameScreen.swapScreen(  this.lastGridId );
+    showSelector : function(id, swapScreen)
+    {       
+        var grillState = this.gameScreen.grillScreen.isGrillBeingUsed(id);
+        console.log("GRILLSTATE: " + grillState);
+        switch(grillState)
+        {
+            case 0:
+                this.doughContainer.fillWithCategory("doughs", this);
+                this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:0}, 100, Phaser.Easing.Linear.None).start();
+                break;
+            case 1:
+                this.doughContainer.fillWithCategory("gems", this);
+                this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:0}, 100, Phaser.Easing.Linear.None).start();
+                break;
+            case 2:
+                // GH: Actual cooking begins
+                break;
+            case 3:
+                break;
+        }
+        if(swapScreen)
+            this.gameScreen.swapScreen(this.lastGridId);
         this.lastGridId = "";
     },
     
     useType: function(type)
     {
-        this.inventory.useType(type);
-        console.log("TYPE: " + type);
+        this.inventory.useType(type);  
+        this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:this.world.height }, 100, Phaser.Easing.Linear.None).start();
         this.gameScreen.fillWithDough(type);
     },
     
     update: function()
     {
-    //    this.mold.update();  
-    },
-    
-    
-    backToMain :function()
-    {
-     ///   this.game.state.start("EndGame");    
+        this.flipButton.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
     },
     
     gameResized: function (width, height) 
@@ -579,8 +648,6 @@ BasicGame.Game.prototype = {
     }
 
 };
-
-
 
 BasicGame.Options = function(game)
 {
