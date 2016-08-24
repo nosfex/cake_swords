@@ -9,7 +9,6 @@
     //  You don't have to do this in the html, it could be done in your Game state too, but for simplicity I'll keep it here.
     game.state.add('Menu', BasicGame.Menu);
     game.state.add('Game', BasicGame.Game);
-    game.state.add('Options', BasicGame.Options);
     game.state.add('EndGame', BasicGame.EndGame);
     //  Now start the Game state.
     game.state.start('Menu');

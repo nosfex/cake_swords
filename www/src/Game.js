@@ -20,9 +20,9 @@ Selector.DoughSelector.prototype.constructor = Selector.DoughSelector;
 Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
 {
     this.removeAll();
-    var bkg = game.make.sprite(game.world.width * 0.4, game.world.height * 0.1 , 'dough_container');
+    var bkg = game.make.sprite(0, 0, 'dough_container');
     this.add(bkg, true);
-    var xy = {x:game.world.width * 0.4, y:0};
+    var xy = {x:0, y:0};
     
     var key = {};
     var i = 0;
@@ -34,10 +34,10 @@ Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
             {
              
                 key = game.inventory.doughs[i];
-                if(key.count > 0)
+          //      if(key.count > 0)
                 {
-                    xy.y = game.world.height * 0.1 + (60 * i);
-                    this.setupButtons('dough_test', xy, key.name);
+                    xy.y =  (60 * i);
+                    this.setupButtons('dough_test', xy, key.name, i, category);
                 }
             }
             break;
@@ -46,21 +46,20 @@ Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
             {
                 key = game.inventory.gems[i];
               
-                if(key.count > 0)
+            //    if(key.count > 0)
                 {
-                    xy.y = game.world.height * 0.1 + (60 * i);
-                    this.setupButtons('gems', xy, key.name);
+                    xy.y =  (60 * i);
+                    this.setupButtons('gems', xy, key.name, i, category);
                 }
             }
             break;
     }
 };
 
-Selector.DoughSelector.prototype.setupButtons = function(spriteID, xy, type)
+Selector.DoughSelector.prototype.setupButtons = function(spriteID, xy, type, id, category)
 {
-    var d = new UIBaseDough.Dough(this.game, xy,spriteID, type);
-    this.add(d, true);
-    this.add(this.game.make.button(xy.x, xy.y,spriteID, function() { this.game.useType(this.type);}, d, 0, 1, 2,3));
+    var d = new UIBaseDough.Dough(this.game, xy,spriteID, type, id, category);
+    this.add(d, true);    
 };
 
 //---------------------------------------------------------------------------------------
@@ -72,18 +71,54 @@ var UIBaseDough =
     
 };
 
-UIBaseDough.Dough = function(game, xy, sprite, type)
+UIBaseDough.Dough = function(game, xy, sprite, type, id, category)
 {
     Phaser.Sprite.call(this, game, xy.x, xy.y, 'circle_container');
     
     this.game = game;
+    
+    this.btn = game.make.button(0, 0,sprite, function() { this.game.useType(this.type);}, this, 0, 1, 2,3);
+    this.addChild(this.btn);
+    
     this.type = type;
     this.text = game.make.text(0, 0, 'x1');
     this.addChild(this.text);
+    this.id = id;
+    this.category = category;
+ //   this.visible = false;
+//    this.btn.inputEnabled = false;
 };
 
 UIBaseDough.Dough.prototype = Object.create(Phaser.Sprite.prototype);
 UIBaseDough.Dough.prototype.constructor = UIBaseDough.Dough;
+
+UIBaseDough.Dough.prototype.update = function()
+{
+    //this.game.inventory.gems
+    
+    switch(this.category)
+    {
+        case 'doughs':
+            this.checkEnabled(this.game.inventory.doughs);
+            break;
+        case 'gems':
+            this.checkEnabled(this.game.inventory.gems);
+            break;
+    }
+};
+
+UIBaseDough.Dough.prototype.checkEnabled = function(array)
+{
+    
+    //for(i = 0 ; i < array.length ;i++)
+    
+    var key = array[this.id];
+    
+    this.btn.inputEnabled = key.count > 0 === true ? true : false;
+    //this.visible = key.count > 0  === true ? true : false;    
+    this.text.text = "x"+key.count;
+        
+};
 
 //---------------------------------------------------------------------------------------
 // GH: Real Dough Data
@@ -96,8 +131,7 @@ var GameDough =
 GameDough.Dough = function(game, xy, sprite, type, id)
 {
     Phaser.Sprite.call(this, game, xy.x, xy.y, sprite);
-    console.log("Dough: " + this.toString());
-    console.log("DoughSprite: " + sprite);
+    
     this.game = game;
     this.type = type;
     
@@ -152,24 +186,6 @@ GameDough.Dough.prototype.update = function()
     }
 };
 
-tweenTint = function(obj, parent, startColor, endColor, time) {    
-    // create an object to tween with our step value at 0    
-    var colorBlend = {step: 0};    
-    // create the tween on this object and tween its step property to 100    
-    var colorTween = obj.game.add.tween(colorBlend).to({step: 100}, time);        
-    // run the interpolateColor function every time the tween updates, feeding it the    
-    // updated value of our tween each time, and set the result as our tint   
-    colorTween.onUpdateCallback(function() {      
-        obj.tint = Phaser.Color.interpolateColor(startColor, endColor, 100, colorBlend.step);      
-    });
-    // set the object to the start color straight away    
-    obj.tint = startColor;            
-    // start the tween    
-    colorTween.start();
-    parent.storedTween = colorTween;
-    
-};
-
 GameDough.Dough.prototype.onFillEnd = function()
 {  
     this.state = 1;
@@ -188,7 +204,7 @@ GameDough.Dough.prototype.onFlip = function()
     if(this.flipped === false)
     {
         this.currentCookTime = 0;
-        console.log("AT DOUGH FLIPs");
+        
         this.flipped = true;  
         this.visual.tint = 0xFFFFFF;
     }         
@@ -196,8 +212,7 @@ GameDough.Dough.prototype.onFlip = function()
 
 GameDough.Dough.prototype.onTakeout = function()
 {
-    console.log("TAKING OUT");
-    if(this.readyToTakeout )
+    if(this.readyToTakeout)
     {
         if(this.burnt) 
         {
@@ -224,6 +239,87 @@ GameDough.Dough.prototype.reset = function()
 };
 
 //---------------------------------------------------------------------------------------
+// GH: Item Data
+//---------------------------------------------------------------------------------------
+
+var Item = {};
+
+Item = function(game, xy, sprite, type)
+{
+    Phaser.Sprite.call(this, game, xy.x, xy.y, sprite);
+    // GH: basic duration of item in screen
+    this.maxLifespan = 3000;
+    this.curLifespan = 0;
+    this.game = game;
+    this.type = type;
+    
+    this.lockTillGround = true;
+    this.events.onInputDown.add(this.onDown, this);
+    
+    this.posTween = this.game.add.tween(this.position);
+    this.posTween.to({x:game.rnd.integerInRange(100, 400), y:this.game.world.height * 0.62 }, 300, Phaser.Easing.Quadratic.In);
+    this.posTween.onComplete.add(this.onGround , this);   
+    this.posTween.start();
+    
+    this.anchor.setTo(0.5, 0.5);
+     this.inputEnabled = true;
+};
+
+
+Item.prototype = Object.create(Phaser.Sprite.prototype);
+Item.constructor = Item;
+
+Item.prototype.onGround = function()
+{
+     this.lockTillGround = false; 
+};
+
+Item.prototype.update = function()
+{
+    if(this.lockTillGround)
+        return;
+    var delta = this.curLifespan / this.maxLifespan;
+    this.curLifespan += this.game.time.elapsed;
+    
+    this.alpha =1 -  delta;
+
+    if(this.alpha === 0)
+    {   
+    //    this.destroy();
+    }
+    
+    if(this.inputEnabled === false)
+    {
+        this.angle += 10 * this.game.time.elapsed;
+        
+        if(this.angle === 360)
+        {
+            this.angle = 0;
+        }  
+    }
+};
+
+Item.prototype.onDown = function()
+{
+    if(this.alpha === 0)
+        return;
+    
+    this.game.inventory.addItem(this.type);
+    this.inputEnabled = false;
+    var posTween = this.game.add.tween(this.position);
+    posTween.to({x:this.game.world.width *0.9, y:this.game.world.height * 0.2 }, 200, Phaser.Easing.Linear.None);
+    posTween.onComplete.add(this.alphaNull , this);    
+    posTween.start();
+};
+
+Item.prototype.alphaNull = function()
+{
+    this.alpha = 0;
+};
+
+
+
+//---------------------------------------------------------------------------------------
 // GH: GameScreens Data
 //---------------------------------------------------------------------------------------
 
@@ -232,12 +328,36 @@ var GameScreen = {};
 GameScreen.BattleScreen = function(game)
 {
     Phaser.Group.call(this, game, game.world, 'BattleScreen', false, true, Phaser.Physics.ARCADE);
-    var bb = this.add(game.make.sprite(0, game.world.height * 0.0151, 'battle_screen_bkg'));
-    bb.visible = false;
+    this.itemDrop = 0;
+     this.inputEnabled = true;
+    this.game = game;    
 };
 
 GameScreen.BattleScreen.prototype = Object.create(Phaser.Group.prototype);
 GameScreen.BattleScreen.constructor = GameScreen.BattleScreen;
+
+GameScreen.BattleScreen.prototype.spawnItems = function()
+{  
+    
+    
+    var item = new Item(this.game, {x:this.game.world.width * 0.57, y:this.game.world.height * 0.37}, "icon_barro", "Barro");
+    this.add(item);
+};
+
+GameScreen.BattleScreen.prototype.update = function()
+{
+    
+    this.forEachAlive(function(obj){ obj.update(); obj.visible = this.game.gameScreen.atScreen === "battle" ? true : false; }, this);
+    if(this.itemDrop >= 3000)
+    {
+        var max = this.game.rnd.integerInRange(1, 3);
+        for (var i = 0; i < max; i++)
+            this.spawnItems();
+        this.itemDrop = 0;
+    }
+    
+    this.itemDrop += this.game.time.elapsed;
+};
 
 GameScreen.GrillScreen = function(game)
 {
@@ -289,7 +409,7 @@ GameScreen.GrillScreen.prototype.fillMold = function(type)
     
     this.dough[i].visual.visible = true;
     var tween = this.game.add.tween(  this.dough[i].visual.scale);
-    console.log(this.dough[i].visual);
+    
     tween.to({x:1, y:1}, 500, Phaser.Easing.Linear.None);
     
     if(this.dough[i].state === 0)
@@ -340,13 +460,11 @@ GameScreen.GrillScreen.prototype.initWithMold = function(moldType)
 
 GameScreen.GrillScreen.prototype.flipDough = function(id)
 {
-    console.log('flip shit: ' + id );
     this.dough[id].onFlip();
 };
 
 GameScreen.GrillScreen.prototype.takeout = function(id)
 {
-    console.log('take out this grill: ' + id );
     this.dough[id].onTakeout();
 };
 
@@ -364,7 +482,7 @@ GameScreen.GameScreen = function(game)
     this.add(this.grillScreen);
     
     this.pendingScreen = "";
-    this.atScreen = "battle";
+    this.atScreen = "";
 };
 
 GameScreen.GameScreen.prototype = Object.create(Phaser.Group.prototype);
@@ -374,11 +492,17 @@ GameScreen.GameScreen.prototype.swapScreen = function(toScreen)
 {
     if(this.pendingScreen !== "")
         return;
+    
     this.atScreen = this.pendingScreen = toScreen;
     var tween = this.game.add.tween(this.grillScreen.bkg.scale);
+    
+    this.grillScreen.molds[currentGrill].visible = false;
     tween.to({x:1, y:0}, 100, Phaser.Easing.Linear.None);
     tween.onComplete.add(this.onExitFinished, this);
     tween.start(); 
+    
+    this.game.hideGrillUI(true);
+    
 };
 
 GameScreen.GameScreen.prototype.checkDoughs = function()
@@ -395,12 +519,17 @@ GameScreen.GameScreen.prototype.onExitFinished = function()
         this.grillScreen.initWithMold("");
         this.game.grillPick = -1;
         this.grillScreen.checkDoughs();
+        this.grillScreen.molds[currentGrill].visible = false;
+        
+        this.game.tweenBkg(1);
     }   
     else
     {
         this.game.add.tween(this.grillScreen.bkg.scale).to({x:1, y:1}, 100, Phaser.Easing.Linear.None).start();
         this.grillScreen.enabled = true;
         this.grillScreen.initWithMold(this.pendingScreen);
+        this.game.tweenBkg(-1);
+
     }
     this.pendingScreen = "";
 };
@@ -461,7 +590,6 @@ Inventory.prototype =
     addSword: function(obj)
     {
         var materials = this.currentSword[currentGrill];
-        console.log("DEBUG MATERIALS: " + materials + this.currentSword[currentGrill]);
         var d = materials.ad;
         var g = materials.bd;
         
@@ -469,6 +597,36 @@ Inventory.prototype =
         
         obj.durability = finalDuration;
         this.game.swordQueue.addSword(obj);   
+    },
+    
+    addItem : function(type)
+    {
+        var i = 0; 
+        var key = null;
+        for(i = 0; i < this.doughs.length ; i++)
+        {
+            if(this.doughs[i].name === type)
+            {
+                this.game.showSelector(0, false);
+                key = this.doughs[i];
+                this.doughs[i].count++;
+                break;
+            }
+        }
+        
+        if(key === null)
+        {
+            for(i = 0; i < this.doughs.length ; i++)
+            {
+                if(this.gems[i].name === type)
+                {
+                    this.game.showSelector(1, false);
+                    key = this.gems[i];
+                    this.gems[i].count++;
+                    break;
+                }
+            }
+        }
     }
 };
 
@@ -515,6 +673,7 @@ Clock.Clock.prototype.update = function()
     else
     {
         this.greenCorner.visible = false;
+        this.needle.angle = 0;
     }
 };
 
@@ -551,20 +710,80 @@ SwordQueue = function(game)
     Phaser.Group.call(this, game, game.world, 'SwordQueue', false, true, Phaser.Physics.ARCADE);
     this.swords = 0;
     this.game = game;
+    
+    this.currentIndex = 0;
+    this.currentElapsed = 0;
+    this.currentDelta = 0;
+    
+    this.addSword({durability:10, ingredients:'', type:'sword'});
 };
 
 SwordQueue.prototype =  Object.create(Phaser.Group.prototype);
 SwordQueue.prototype.constructor = SwordQueue;
 
+
+var sQueue = [];
+var currentIndex = 0;
 SwordQueue.prototype.addSword = function(obj)
 {
+    sQueue[this.swords] = obj;
     this.swords++;
-    this.game.stackText.text = this.swords.toString();
+    
+};
+
+SwordQueue.prototype.update = function()
+{
+    //console.log("bullshitqueue: " +  this.sQueue[this.currentIndex].durability);
+    if((sQueue[currentIndex] !== undefined))
+    {
+        var curDur = sQueue[currentIndex].durability;
+        this.currentDelta = this.currentElapsed / (curDur * 1000);
+        this.currentElapsed += this.game.time.elapsed;
+        
+        if(this.currentDelta  >= 1)
+        {
+            this.currentElapsed = 0;
+            currentIndex++;
+            if(sQueue[currentIndex] === undefined)
+            {
+                // GH: GAME LOSS    
+            }
+        }
+    }
 };
 
 //---------------------------------------------------------------------------------------
+//  GH: Fiona's sword life bar
+//---------------------------------------------------------------------------------------
+
+var LifeBar = {};
+
+LifeBar = function(game)
+{
+    Phaser.Group.call(this, game, game.world, 'SwordQueue', false, true, Phaser.Physics.ARCADE);
+    this.game = game;
+    
+    this.redline = game.make.sprite(0, 0, 'lifebar_red');
+    this.add(this.redline);
+    this.greenline = game.make.sprite(85, 20, 'lifebar_green');
+    this.add(this.greenline);
+    this.container = game.make.sprite(0, 0, 'lifebar_frame');
+    this.add(this.container);
+    this.greenline.anchor.setTo(0, 0);
+};
+
+LifeBar.prototype = Object.create(Phaser.Group.prototype);
+LifeBar.prototype.constructor = LifeBar;
+
+LifeBar.prototype.update = function()
+{
+    var delta = 1-this.game.swordQueue.currentDelta;
+    this.greenline.scale.setTo(delta, 1);
+};
+//---------------------------------------------------------------------------------------
 //  GH: Game menus & flow
 //---------------------------------------------------------------------------------------
+
 var currentGrill  = 0;
 // create BasicGame Class
 var BasicGame = {};
@@ -610,11 +829,13 @@ BasicGame.Game.prototype = {
         // Re-calculate scale mode and update screen size. This only applies if
         // ScaleMode is not set to RESIZE.
         this.scale.refresh();
+        
+        //console.log("ACTIVEPOINTERS: " + this.input.pointer);
     },
 
     preload: function () 
     {
-        this.load.spritesheet('button', 'assets/button_sprite_sheet_crapped.png', 193, 71);
+        
         this.load.json('gamedata', 'assets/gamedata.json');
         // GH: Grill mold
         this.load.image('sword_mold', 'assets/molde_sword.png');
@@ -637,21 +858,52 @@ BasicGame.Game.prototype = {
         this.load.image('sword_btn', 'assets/sword.png');
         // GH: gems
         this.load.spritesheet('gems', 'assets/gems_test.png', 32, 32);
-        this.load.image('takeout', 'assets/takeout.png');
+        this.load.image('takeout', 'assets/icon_weaponready.png');
         // GH: Flip 
-        this.load.image('flip', 'assets/flip.png');
+        this.load.image('flip', 'assets/icon_weaponflip.png');
         this.load.image('peppermint', 'assets/peppermint.jpg');
         
         // GH: Clock
-        this.load.image('clock_canvas', 'assets/clock/clock_canvas.png');
-        this.load.image('clock_green', 'assets/clock/clock_green.png');
-        this.load.image('clock_needle', 'assets/clock/clock_needle.png');
+        this.load.image('clock_canvas', 'assets/clock_canvas.png');
+        this.load.image('clock_green', 'assets/clock_green.png');
+        this.load.image('clock_needle', 'assets/clock_needle.png');
         
         // GH: Weaponstack
-        this.load.image('weaponstack_icon', 'assets/weapon_stack/weaponstack_swordplaceholder.png');
-        this.load.image('weaponstack_container', 'assets/weapon_stack/weaponstack_container.png');
+        this.load.image('weaponstack_icon', 'assets/weaponstack_swordplaceholder.png');
+        this.load.image('weaponstack_container', 'assets/weaponstack_container.png');
+        
+        // GH: lifebar
+        this.load.image('lifebar_frame', 'assets/lifebar_frame.png');
+        this.load.image('lifebar_green', 'assets/lifebar_green.png');
+        this.load.image('lifebar_red', 'assets/lifebar_red.png');
+        
+        // GH: Icon Dough
+        
+        this.load.image('icon_barro', 'assets/items/icon_dough_barro.png');
+        this.load.image('icon_bodoque', 'assets/items/icon_dough_bodoqueancestral.png');
+        this.load.image('icon_caramelo', 'assets/items/icon_dough_caramelo.png');
+        this.load.image('icon_grumosa', 'assets/items/icon_dough_grumosa.png');
+        this.load.image('icon_legamo', 'assets/items/icon_dough_legamo.png');
+        
+        this.load.image('smoke_1', 'assets/smoke/smoke_1.png');
+        this.load.image('smoke_2', 'assets/smoke/smoke_2.png');
+        this.load.image('smoke_3', 'assets/smoke/smoke_3.png');
         
         this.load.image('bkg', 'assets/at_bg.png');
+    },
+    
+    tweenBkg :function(direction)
+    {
+        var dir = direction > 0 ? 0 : -480;
+        this.add.tween(this.bkg.position).to({x:0, y:dir}, 500, Phaser.Easing.Linear.None).start();
+    },
+    
+    hideGrillUI :function(hide)
+    {
+        if(hide)  
+        {
+            this.add.tween(this.doughContainer.position).to({x:this.world.width, y:this.world.height * 0.1 }, 100, Phaser.Easing.Linear.None).start();
+        }
     },
 
     // GH: Create all stuff
@@ -661,27 +913,25 @@ BasicGame.Game.prototype = {
         var phaserJSON = this.cache.getJSON('gamedata');
         this.add.group(this.mold);
         this.inventory = new Inventory(this);
+        this.bkg = this.add.sprite(0, -480, 'bkg');
         
-        this.add.sprite(0, 0, 'bkg');
         // GH: Dough container
         this.doughContainer = new Selector.DoughSelector(this);
         this.add.group(this.doughContainer);
         this.doughContainer.position.x = this.world.centerX;
-        this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:this.world.height }, 100, Phaser.Easing.Linear.None).start();
+        this.add.tween(this.doughContainer.position).to({x:this.world.width, y:this.world.height * 0.1}, 100, Phaser.Easing.Linear.None).start();
         // GH: Grills setup
-      
+            
         // GH: GameScreen setup
         this.gameScreen = new GameScreen.GameScreen(this);
         this.add.group(this.gameScreen);
         this.lastGridId = ""; 
         // GH: ui buttons / battle
-      //  this.add.button(this.world.width * 0.7, 0, 'sword_btn', this.showBattleScreen, this);
+        this.battleBtn = this.add.button(this.world.width * 0.7, 0, 'sword_btn', this.showBattleScreen, this);
         // GH: Flip
-        this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.3, 'flip', this.flipDough, this);
-        this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.5, 'takeout', this.takeout, this);
+        this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'flip', this.flipDough, this);
+        this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'takeout', this.takeout, this);
         this.takeoutButton.visible = false;
-    
-       
         
         this.swordQueue = new SwordQueue(this);
         this.add.group(this.swordQueue);
@@ -704,6 +954,15 @@ BasicGame.Game.prototype = {
         this.clockGroup = new Clock.ClockGroup(this);
         this.add.group(this.clockGroup);
       
+        
+        this.add.group(new LifeBar(this));
+        
+        this.emitter = this.add.emitter(this.world.centerX, 200, 200);
+
+        //  Here we're passing an array of image keys. It will pick one at random when emitting a new particle.
+        this.emitter.makeParticles(['smoke_1', 'smoke_2', 'smoke_3']);
+
+        this.emitter.start(true, 1000, null, 20);
     },
     
 
@@ -715,7 +974,6 @@ BasicGame.Game.prototype = {
     
     flipDough : function()
     {
-        console.log("FLIPDOUGHID; " + currentGrill);
         this.gameScreen.grillScreen.flipDough(currentGrill);
     },
     
@@ -723,6 +981,7 @@ BasicGame.Game.prototype = {
     showBattleScreen : function()
     {
         this.gameScreen.swapScreen("battle");
+        
     },
     
     // GH: Select grid
@@ -736,7 +995,7 @@ BasicGame.Game.prototype = {
             this.game.grillPick  = this.id;
             this.game.gameScreen.checkDoughs();
             // GH: Show the selector
-            console.log(this.id + " GRILL ID" );
+            
             currentGrill = this.id;
             this.game.showSelector(this.id, true);
         }
@@ -745,16 +1004,16 @@ BasicGame.Game.prototype = {
     showSelector : function(id, swapScreen)
     {       
         var grillState = this.gameScreen.grillScreen.isGrillBeingUsed(id);
-        console.log("GRILLSTATE: " + grillState);
+        
         switch(grillState)
         {
             case 0:
                 this.doughContainer.fillWithCategory("doughs", this);
-                this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:0}, 100, Phaser.Easing.Linear.None).start();
+                this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.89, y:this.world.height * 0.1}, 100, Phaser.Easing.Linear.None).start();
                 break;
             case 1:
                 this.doughContainer.fillWithCategory("gems", this);
-                this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:0}, 100, Phaser.Easing.Linear.None).start();
+                this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.89, y:this.world.height * 0.1}, 100, Phaser.Easing.Linear.None).start();
                 break;
             case 2:
                 // GH: Actual cooking begins
@@ -770,131 +1029,25 @@ BasicGame.Game.prototype = {
     useType: function(type)
     {
         this.inventory.useType(type);  
-        this.add.tween(this.doughContainer.position).to({x:this.world.centerX, y:this.world.height }, 100, Phaser.Easing.Linear.None).start();
+        this.add.tween(this.doughContainer.position).to({x:this.world.width , y:this.world.height  * 0.1}, 100, Phaser.Easing.Linear.None).start();
         this.gameScreen.fillWithDough(type);
     },
     
     update: function()
     {
         this.flipButton.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
+        
         this.takeoutButton.visible = this.gameScreen.grillScreen.dough[currentGrill].readyToTakeout;
+        this.flipButton.InputEnabled = !this.takeoutButton.visible;
+        
+        this.battleBtn.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
+        
+        this.stackText.text = this.swordQueue.swords.toString();
+
     },
     
     gameResized: function (width, height) 
     {
-    }
-};
-
-BasicGame.Options = function(game)
-{
-    this.game = game;
-    this.leftArrow  = null;
-    this.rightArrow = null;
-    this.playButton = null;
-    this.audioText  = null;
-};
-
-BasicGame.Options.prototype = {
-
-    init: function () {
-        // set up input max pointers
-        this.input.maxPointers = 1;
-        // set up stage disable visibility change
-        this.stage.disableVisibilityChange = true;
-        // Set up the scaling method used by the ScaleManager
-        // Valid values for scaleMode are:
-        // * EXACT_FIT
-        // * NO_SCALE
-        // * SHOW_ALL
-        // * RESIZE
-        // See http://docs.phaser.io/Phaser.ScaleManager.html for full document
-        this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-        // If you wish to align your game in the middle of the page then you can
-        // set this value to true. It will place a re-calculated margin-left
-        // pixel value onto the canvas element which is updated on orientation /
-        // resizing events. It doesn't care about any other DOM element that may
-        // be on the page, it literally just sets the margin.
-        this.scale.pageAlignHorizontally = true;
-        this.scale.pageAlignVertically = true;
-        // Force the orientation in landscape or portrait.
-        // * Set first to true to force landscape. 
-        // * Set second to true to force portrait.
-        this.scale.forceOrientation(true, false);
-        // Sets the callback that will be called when the window resize event
-        // occurs, or if set the parent container changes dimensions. Use this 
-        // to handle responsive game layout options. Note that the callback will
-        // only be called if the ScaleManager.scaleMode is set to RESIZE.
-        this.scale.setResizeCallback(this.gameResized, this);
-        // Set screen size automatically based on the scaleMode. This is only
-        // needed if ScaleMode is not set to RESIZE.
-        this.scale.updateLayout(true);
-        // Re-calculate scale mode and update screen size. This only applies if
-        // ScaleMode is not set to RESIZE.
-        this.scale.refresh();
-    },
-
-    preload: function () 
-    {
-        this.load.spritesheet('button', 'assets/button_sprite_sheet_crapped.png', 193, 71);
-        this.load.spritesheet('arrow', 'assets/arrow-button.png', 112, 95);
-    },
-
-    create: function () 
-    {
-        this.leftArrow = this.add.button(this.world.centerX * 0.3, this.world.centerY * 0.5, 'arrow', this.onLeftArrow, this, 0, 0, 0);
-        this.leftArrow.onInputDown.add(this.onLeftArrow, this); 
-        this.leftArrow.onInputUp.add(this.onLeftArrowUp, this); 
-        
-        
-        this.rightArrow = this.add.button(this.world.centerX * 1.2, this.world.centerY * 0.5, 'arrow', this.onRightArrow, this, 1, 1, 1);
-        this.rightArrow.onInputDown.add(this.onRightArrow, this);
-        this.rightArrow.onInputUp.add(this.onRightArrowUp, this); 
-        
-        var style = { font: "32px Arial", fill: "#ff0044", wordWrap: true, wordWrapWidth: 200, align: "center", backgroundColor: "#ffff00" };
-        this.audioText = this.add.text(this.world.centerX * 0.95, this.world.centerY * 0.5, "10", style);
-        
-        this.playButton = this.add.button(this.world.centerX, this.world.centerY * 1.05, 'button', this.onPlayButton, this, 2, 1, 0);
-        
-        this.playButton.position.x -= this.playButton.width * 0.5;        
-    },
-    
-    onPlayButton : function() 
-    {
-        this.game.state.start("Game");
-    },
-    
-    onLeftArrow : function() {},     
-    onRightArrow : function() {},     
-    
-    // GH: We substract half because phaser double dips
-    onLeftArrowUp :function()
-    {
-        this.game.userVolume -= 0.05;  
-        if(this.game.userVolume <= 0)
-        {
-            this.game.userVolume = 0;
-        }
-        this.audioText.text =  (Math.ceil(this.game.userVolume * 10 )).toString();
-    },
-    
-    // GH: We substract half because phaser double dips
-    onRightArrowUp :function()
-    {
-        this.game.userVolume += 0.05;  
-        if(this.game.userVolume >= 1)
-        {
-            this.game.userVolume = 1;
-        }
-        this.audioText.text = (Math.ceil(this.game.userVolume * 10 )).toString();
-    },
-    
-    gameResized: function (width, height) 
-    {
-        // This could be handy if you need to do any extra processing if the 
-        // game resizes. A resize could happen if for example swapping 
-        // orientation on a device or resizing the browser window. Note that 
-        // this callback is only really useful if you use a ScaleMode of RESIZE 
-        // and place it inside your main game state.
     }
 };
 
@@ -945,7 +1098,7 @@ BasicGame.EndGame.prototype = {
 
     preload: function () 
     {
-        this.load.spritesheet('button', 'assets/button_sprite_sheet_crapped.png', 193, 71);
+        this.load.spritesheet('button', 'assets/icons_spritesheet_play.png', 193, 71);
     },
 
     create: function () 
@@ -1055,8 +1208,7 @@ BasicGame.Menu.prototype = {
       
     onOptionsButton : function()
     {
-        //this.game.state.start("Options");
-        this.game.userVolume = this.game.userVolume == 0 ? 1  : 0;
+        this.game.userVolume = this.game.userVolume === 0 ? 1  : 0;
     },
     
     onPlayButton :function()
