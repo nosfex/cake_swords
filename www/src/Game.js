@@ -20,6 +20,7 @@ Selector.DoughSelector.prototype.constructor = Selector.DoughSelector;
 Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
 {
     this.removeAll();
+    this.callAll('kill');
     var bkg = game.make.sprite(0, 0, 'dough_container');
     this.add(bkg, true);
     var xy = {x:0, y:0};
@@ -34,23 +35,16 @@ Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
             {
              
                 key = game.inventory.doughs[i];
-          //      if(key.count > 0)
-                {
-                    xy.y =  (60 * i);
-                    this.setupButtons('dough_test', xy, key.name, i, category);
-                }
+                xy.y =  (60 * i);
+                this.setupButtons(dicon[i], xy, key.name, i, category);
             }
             break;
         case 'gems':
             for(i = 0 ; i < game.inventory.gems.length ;i++)
             {
                 key = game.inventory.gems[i];
-              
-            //    if(key.count > 0)
-                {
-                    xy.y =  (60 * i);
-                    this.setupButtons('gems', xy, key.name, i, category);
-                }
+                xy.y =  (60 * i);
+                this.setupButtons(gicon[i], xy, key.name, i, category);
             }
             break;
     }
@@ -147,13 +141,17 @@ GameDough.Dough = function(game, xy, sprite, type, id)
     
     this.swordData = {durability:10, type:'sword', ingredients:''};
     
-    var bmd = game.make.bitmapData(350, 200);
-    bmd.alphaMask('peppermint', 'dough_grill');
-    this.visual = game.make.sprite(xy.x +50 , xy.y + 130, bmd);
+    var bmd = game.make.bitmapData(600, 256);
+    bmd.alphaMask('mask_' + itemid[id], 'dough_grill');
+    this.visual = game.make.sprite(xy.x +150 , xy.y + 130, bmd);
     this.visual.anchor.setTo(0.5, 0.5);
     this.burnt = false;
     
     this.readyToTakeout = false;
+    
+    this.gems = game.make.sprite(xy.x + 50, xy.y +130, 'mask_'+itemid[id +5]);
+    this.gems.visible = false;
+    this.gems.anchor.setTo(0.5, 0.5);
     // GH: States:
     // 0 = IDLE / 1 = COOK_SIDE_A / 2 = COOK_SIDE_B / 3 = READY
 };
@@ -236,12 +234,16 @@ GameDough.Dough.prototype.reset = function()
     this.visual.tint = 0xFFFFFF;
     this.visual.scale.setTo(0,0);
     this.swordData = {durability:10, type:'sword', ingredients:''};
+    
+    this.gems.visible = false;
 };
 
 //---------------------------------------------------------------------------------------
 // GH: Item Data
 //---------------------------------------------------------------------------------------
-
+var dicon = ['dough_barro', 'dough_bodoque', 'dough_caramelo', 'dough_grumosa', 'dough_legamo'];
+var gicon = ['gem_caramelo', 'gem_isotopo', 'gem_ojo', 'gem_piedra', 'gem_power'];
+var itemid = ["Barro","Caramelo", "Legamo", "Grumosa", "Ancestral", "Alambre", "HojasdeHierro", "DientesdeObsidiana", "CalzoncillosdeAcero", "EscamasdeDragon"];
 var Item = {};
 
 Item = function(game, xy, sprite, type)
@@ -262,7 +264,7 @@ Item = function(game, xy, sprite, type)
     this.posTween.start();
     
     this.anchor.setTo(0.5, 0.5);
-     this.inputEnabled = true;
+    this.inputEnabled = true;
 };
 
 
@@ -338,9 +340,21 @@ GameScreen.BattleScreen.constructor = GameScreen.BattleScreen;
 
 GameScreen.BattleScreen.prototype.spawnItems = function()
 {  
+    var megazord = [];
+    for(var i = 0 ; i < 5; i++)
+    {
+        megazord[i] = dicon[i];
+        megazord[5 + i] = gicon[i];
+    }
     
+    console.log("bullshit: " + megazord[6]);
     
-    var item = new Item(this.game, {x:this.game.world.width * 0.57, y:this.game.world.height * 0.37}, "icon_barro", "Barro");
+   
+    var rnd = this.game.rnd.integerInRange(0, 9);
+    var icon = megazord[rnd];
+    var data = itemid[rnd];
+    
+    var item = new Item(this.game, {x:this.game.world.width * 0.57, y:this.game.world.height * 0.37}, icon, data);
     this.add(item);
 };
 
@@ -380,6 +394,7 @@ GameScreen.GrillScreen = function(game)
     {
         this.add(this.dough[i]);
         this.add(this.dough[i].visual);
+        this.add(this.dough[i].gems);
         this.dough[i].visual.scale.setTo(0, 0);
         this.dough[i].visual.anchor.setTo(0.5, 0.5);
         this.dough[i].scale.setTo(0,0);
@@ -392,7 +407,7 @@ GameScreen.GrillScreen = function(game)
     this.molds = [];
     for(i = 0; i < this.moldid.length; i++)
     {
-        this.molds[i] = game.make.sprite(0,  game.world.height * 0.0151, this.moldid[i]);
+        this.molds[i] = game.make.sprite(0,  game.world.height * 0, this.moldid[i]);
         this.add(this.molds[i]);
         this.molds[i].visible = false;
     }
@@ -405,8 +420,25 @@ GameScreen.GrillScreen.constructor = GameScreen.GrillScreen;
 
 GameScreen.GrillScreen.prototype.fillMold = function(type)
 {
-    var i = this.game.grillPick;
     
+    if(this.game.gameScreen.atScreen === "battle")
+        return;
+    var i = this.game.grillPick;
+    console.log("TYPE: " + type);
+    
+    if(this.dough[i].visual.scale.x <= 0)
+    {
+        var bmd =this.game.make.bitmapData(600, 256);
+        bmd.alphaMask('mask_' + type, 'dough_grill');
+        this.dough[i].visual.loadTexture(bmd);// = game.make.sprite(xy.x +50 , xy.y + 130, bmd);
+    
+    }
+    else
+    { 
+        this.dough[i].gems.loadTexture('mask_' + type);
+        this.dough[i].gems.visible = true;
+    }
+        
     this.dough[i].visual.visible = true;
     var tween = this.game.add.tween(  this.dough[i].visual.scale);
     
@@ -440,10 +472,13 @@ GameScreen.GrillScreen.prototype.checkDoughs = function()
     for (i = 0 ; i < this.dough.length; i++)
     {
         this.dough[i].visual.visible = false;
+        this.dough[i].gems.visible = false;
     }
     if(this.game.grillPick >= 0)
     {
         this.dough[this.game.grillPick].visual.visible = true;
+        if(this.dough[this.game.grillPick].visual.scale.x > 0)
+            this.dough[this.game.grillPick].gems.visible = true;
     }
 };
 
@@ -501,8 +536,10 @@ GameScreen.GameScreen.prototype.swapScreen = function(toScreen)
     tween.onComplete.add(this.onExitFinished, this);
     tween.start(); 
     
-    this.game.hideGrillUI(true);
-    
+    if(this.atScreen === "battle")
+    {
+        this.game.hideGrillUI(true);
+    }
 };
 
 GameScreen.GameScreen.prototype.checkDoughs = function()
@@ -547,9 +584,9 @@ var Inventory = {};
 Inventory = function(game)
 {
     this.game   = game;
-    this.doughs = [{name:"Barro", count:10}, {name:"Caramelo", count:0}, {name:"Legamo", count:0}, {name:"Grumosa", count:0}, {name:"Ancestral", count:0}];
+    this.doughs = [{name:itemid[0], count:10}, {name:itemid[1], count:0}, {name:itemid[2], count:0}, {name:itemid[3], count:0}, {name:itemid[4], count:0}];
     
-    this.gems = [{name:"Alambre", count:10}, {name:"HojasdeHierro", count:0}, {name:"DientesdeObsidiana", count:0},{name:"CalzoncillosdeAcero", count:0}, {name:"EscamasdeDragon", count:10}];
+    this.gems = [{name:itemid[5], count:10}, {name:itemid[6], count:0}, {name:itemid[7], count:0},{name:itemid[8], count:0}, {name:itemid[9], count:10}];
     this.currentSword = [{a:'', ad:0 , b:'', bd: 0}, {a:'', ad:0 , b:'', bd: 0},{a:'', ad:0 , b:'', bd: 0},];
 };
 
@@ -684,14 +721,12 @@ Clock.ClockGroup = function(game)
     
     var i = 0; 
     var xy = {x:0, y:0};
-    for(i = 0 ; i < 3 ; i ++)
+    for(i = 0 ; i < 3 ; i ++)   
     {
-        xy.x = 80 + i * 160;
-        xy.y = game.world.height * 0.7;
+        xy.x = 135 + i * 190;
+        xy.y = game.world.height * 0.8;
         var clock = new Clock.Clock(game, i, xy, 'clock_canvas', 'clock_needle', 'clock_green');
-        
         this.add(clock);
-        
     }
 };
 
@@ -830,7 +865,7 @@ BasicGame.Game.prototype = {
         // ScaleMode is not set to RESIZE.
         this.scale.refresh();
         
-        //console.log("ACTIVEPOINTERS: " + this.input.pointer);
+        //console.log("ACTIVEPOINTERS: " + this.input.pointer); 
     },
 
     preload: function () 
@@ -855,14 +890,27 @@ BasicGame.Game.prototype = {
         this.load.image('battle_screen_bkg', 'assets/grill_whole.png');
         this.load.image('grill_screen_bkg', 'assets/grill_whole.png');
         // GH: Battle screen return
-        this.load.image('sword_btn', 'assets/sword.png');
+        this.load.image('sword_btn', 'assets/Up_Button.png');
         // GH: gems
         this.load.spritesheet('gems', 'assets/gems_test.png', 32, 32);
         this.load.image('takeout', 'assets/icon_weaponready.png');
         // GH: Flip 
         this.load.image('flip', 'assets/icon_weaponflip.png');
-        this.load.image('peppermint', 'assets/peppermint.jpg');
         
+        // GH: FOKKEN MASKS dough
+        this.load.image('mask_' + itemid[0], 'assets/masks/mask_dough_barro.png');
+        this.load.image('mask_' + itemid[1], 'assets/masks/mask_dough_bodoqueancestral.png');
+        this.load.image('mask_' + itemid[2], 'assets/masks/mask_dough_caramelo.png');
+        this.load.image('mask_' + itemid[3], 'assets/masks/mask_dough_grumosa.png');
+        this.load.image('mask_' + itemid[4], 'assets/masks/mask_dough_legamo.png');
+        
+        // GH: Fokken masks gem
+        this.load.image('mask_' + itemid[5], 'assets/masks/mask_gem_caramelosdelimon.png');
+        this.load.image('mask_' + itemid[6], 'assets/masks/mask_gem_gemasdepoder.png');
+        this.load.image('mask_' + itemid[7], 'assets/masks/mask_gem_isotoposdepoder.png');
+        this.load.image('mask_' + itemid[8], 'assets/masks/mask_gem_ojosdegato.png');
+        this.load.image('mask_' + itemid[9], 'assets/masks/mask_gem_piedras.png');
+                
         // GH: Clock
         this.load.image('clock_canvas', 'assets/clock_canvas.png');
         this.load.image('clock_green', 'assets/clock_green.png');
@@ -879,11 +927,17 @@ BasicGame.Game.prototype = {
         
         // GH: Icon Dough
         
-        this.load.image('icon_barro', 'assets/items/icon_dough_barro.png');
-        this.load.image('icon_bodoque', 'assets/items/icon_dough_bodoqueancestral.png');
-        this.load.image('icon_caramelo', 'assets/items/icon_dough_caramelo.png');
-        this.load.image('icon_grumosa', 'assets/items/icon_dough_grumosa.png');
-        this.load.image('icon_legamo', 'assets/items/icon_dough_legamo.png');
+        this.load.image('dough_barro', 'assets/items/icon_dough_barro.png');
+        this.load.image('dough_bodoque', 'assets/items/icon_dough_bodoqueancestral.png');
+        this.load.image('dough_caramelo', 'assets/items/icon_dough_caramelo.png');
+        this.load.image('dough_grumosa', 'assets/items/icon_dough_grumosa.png');
+        this.load.image('dough_legamo', 'assets/items/icon_dough_legamo.png');
+        
+        this.load.image('gem_caramelo', 'assets/items/icon_stone_caramelodelimon.png');
+        this.load.image('gem_isotopo', 'assets/items/icon_stone_isotoporadioactivo.png');
+        this.load.image('gem_ojo', 'assets/items/icon_stone_ojodegato.png');
+        this.load.image('gem_piedra', 'assets/items/icon_stone_piedra.png');
+        this.load.image('gem_power', 'assets/items/icon_stone_piedrasdepoder.png');
         
         this.load.image('smoke_1', 'assets/smoke/smoke_1.png');
         this.load.image('smoke_2', 'assets/smoke/smoke_2.png');
@@ -902,7 +956,7 @@ BasicGame.Game.prototype = {
     {
         if(hide)  
         {
-            this.add.tween(this.doughContainer.position).to({x:this.world.width, y:this.world.height * 0.1 }, 100, Phaser.Easing.Linear.None).start();
+            this.add.tween(this.doughContainer.position).to({x:this.world.width, y:this.world.height * 0.2 }, 100, Phaser.Easing.Linear.None).start();
         }
     },
 
@@ -918,8 +972,8 @@ BasicGame.Game.prototype = {
         // GH: Dough container
         this.doughContainer = new Selector.DoughSelector(this);
         this.add.group(this.doughContainer);
-        this.doughContainer.position.x = this.world.centerX;
-        this.add.tween(this.doughContainer.position).to({x:this.world.width, y:this.world.height * 0.1}, 100, Phaser.Easing.Linear.None).start();
+        //this.doughContainer.position.x = this.world.centerX;
+        this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.7, y:this.world.height * 0.2}, 100, Phaser.Easing.Linear.None).start();
         // GH: Grills setup
             
         // GH: GameScreen setup
@@ -927,7 +981,7 @@ BasicGame.Game.prototype = {
         this.add.group(this.gameScreen);
         this.lastGridId = ""; 
         // GH: ui buttons / battle
-        this.battleBtn = this.add.button(this.world.width * 0.7, 0, 'sword_btn', this.showBattleScreen, this);
+        this.battleBtn = this.add.button(this.world.width * 0.68, 0, 'sword_btn', this.showBattleScreen, this);
         // GH: Flip
         this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'flip', this.flipDough, this);
         this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'takeout', this.takeout, this);
@@ -936,8 +990,8 @@ BasicGame.Game.prototype = {
         this.swordQueue = new SwordQueue(this);
         this.add.group(this.swordQueue);
         
-        this.add.sprite(this.world.width * 0.9,  this.world.height * 0, 'weaponstack_container' );
-        this.add.sprite(this.world.width * 0.9,  this.world.height * 0, 'weaponstack_icon' );
+        this.add.sprite(this.world.width * 0.79,  this.world.height * 0, 'weaponstack_container' );
+        this.add.sprite(this.world.width * 0.83,  this.world.height * 0.05, 'weaponstack_icon' );
         var style = { font: "32px Arial", fill: "#ffffff", wordWrap: true, wordWrapWidth: 200, align: "center", backgroundColor: "#000000"};
         this.stackText = this.add.text(this.world.width * 0.9,  this.world.height * 0, "0", style);
         
@@ -946,7 +1000,7 @@ BasicGame.Game.prototype = {
         var i = 0;
         for(i = 0 ; i < 3 ; i++)
         {
-            this.grills[i] = this.add.button((80) + i * 160, this.world.height * 0.66, grillid[i], this.grillSelected, this.grills[i]);
+            this.grills[i] = this.add.button((80) + i * 190, this.world.height * 0.8, grillid[i], this.grillSelected, this.grills[i]);
             this.grills[i].id = i;
             this.grills[i].game = this;
         }
@@ -991,7 +1045,7 @@ BasicGame.Game.prototype = {
         if(this.game.lastGridId === "")
         {
             // GH: Set the ids
-            this.game.lastGridId = this.id;
+            this.game.lastGridId = this.id.toString();
             this.game.grillPick  = this.id;
             this.game.gameScreen.checkDoughs();
             // GH: Show the selector
@@ -1009,11 +1063,11 @@ BasicGame.Game.prototype = {
         {
             case 0:
                 this.doughContainer.fillWithCategory("doughs", this);
-                this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.89, y:this.world.height * 0.1}, 100, Phaser.Easing.Linear.None).start();
+                this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.89, y:this.world.height * 0.2}, 100, Phaser.Easing.Linear.None).start();
                 break;
             case 1:
                 this.doughContainer.fillWithCategory("gems", this);
-                this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.89, y:this.world.height * 0.1}, 100, Phaser.Easing.Linear.None).start();
+                this.add.tween(this.doughContainer.position).to({x:this.world.width * 0.89, y:this.world.height * 0.2}, 100, Phaser.Easing.Linear.None).start();
                 break;
             case 2:
                 // GH: Actual cooking begins
@@ -1029,15 +1083,20 @@ BasicGame.Game.prototype = {
     useType: function(type)
     {
         this.inventory.useType(type);  
-        this.add.tween(this.doughContainer.position).to({x:this.world.width , y:this.world.height  * 0.1}, 100, Phaser.Easing.Linear.None).start();
+        this.add.tween(this.doughContainer.position).to({x:this.world.width , y:this.world.height  * 0.2}, 100, Phaser.Easing.Linear.None).start();
+        
+        console.log("TYPE PRE FILLIN: " + type);
         this.gameScreen.fillWithDough(type);
     },
     
     update: function()
     {
         this.flipButton.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
+        if(this.gameScreen.atScreen !== "battle")
+        {
+            this.takeoutButton.visible = this.gameScreen.grillScreen.dough[currentGrill].readyToTakeout;
+        }
         
-        this.takeoutButton.visible = this.gameScreen.grillScreen.dough[currentGrill].readyToTakeout;
         this.flipButton.InputEnabled = !this.takeoutButton.visible;
         
         this.battleBtn.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
