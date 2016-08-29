@@ -1,30 +1,56 @@
 //---------------------------------------------------------------------------------------
+// GH: Globals Data
+//---------------------------------------------------------------------------------------
+
+
+var dicon = ['dough_barro', 'dough_bodoque', 'dough_caramelo', 'dough_grumosa', 'dough_legamo'];
+var gicon = ['gem_caramelo', 'gem_isotopo', 'gem_ojo', 'gem_piedra', 'gem_power'];
+var itemid = ["Barro","Caramelo", "Legamo", "Grumosa", "Ancestral", "Alambre", "HojasdeHierro", "DientesdeObsidiana", "CalzoncillosdeAcero", "EscamasdeDragon"];
+
+
+//---------------------------------------------------------------------------------------
 // GH: Selector Data
 //---------------------------------------------------------------------------------------
 
+
+// GH: This is the ui component that shows the gems & doughs on the side
 var Selector = {};
 
 Selector.DoughSelector = function(game) 
 {
+    // GH: Phaser inheritance
     Phaser.Group.call(this, game, game.world, 'DoughSelector', false, true, Phaser.Physics.ARCADE);
+    // GH: Set the game here for ease of use
     this.game = game;
-    var i = 0;
+    
+    // GH: Set a starting category
     this.fillWithCategory('doughs', game);
     
     return this;
 };
 
+// GH: Phaser inheritance
 Selector.DoughSelector.prototype = Object.create(Phaser.Group.prototype);
 Selector.DoughSelector.prototype.constructor = Selector.DoughSelector;
 
+// GH: Cleanups the selector
+Selector.DoughSelector.prototype.killPrevious = function()
+{
+    this.callAll('kill');
+    this.removeAll();
+};
+
+// GH: Sets the buttons for this component
 Selector.DoughSelector.prototype.fillWithCategory = function(category, game)
 {
-    this.removeAll();
-    this.callAll('kill');
+    // GH: Cleanup
+    this.killPrevious();
+    // GH: Rebuild everything
     var bkg = game.make.sprite(0, 0, 'dough_container');
     this.add(bkg, true);
     var xy = {x:0, y:0};
     
+    // GH: 
     var key = {};
     var i = 0;
     switch(category)
@@ -79,8 +105,6 @@ UIBaseDough.Dough = function(game, xy, sprite, type, id, category)
     this.addChild(this.text);
     this.id = id;
     this.category = category;
- //   this.visible = false;
-//    this.btn.inputEnabled = false;
 };
 
 UIBaseDough.Dough.prototype = Object.create(Phaser.Sprite.prototype);
@@ -88,8 +112,6 @@ UIBaseDough.Dough.prototype.constructor = UIBaseDough.Dough;
 
 UIBaseDough.Dough.prototype.update = function()
 {
-    //this.game.inventory.gems
-    
     switch(this.category)
     {
         case 'doughs':
@@ -103,13 +125,9 @@ UIBaseDough.Dough.prototype.update = function()
 
 UIBaseDough.Dough.prototype.checkEnabled = function(array)
 {
-    
-    //for(i = 0 ; i < array.length ;i++)
-    
     var key = array[this.id];
     
     this.btn.inputEnabled = key.count > 0 === true ? true : false;
-    //this.visible = key.count > 0  === true ? true : false;    
     this.text.text = "x"+key.count;
         
 };
@@ -163,7 +181,6 @@ GameDough.Dough.prototype.update = function()
 {
     if(this.cookStarted)
     {
-        
         this.currentCookTime += this.game.time.elapsed;
         var delta = this.currentCookTime / this.maxCookTime;
         if(delta >= 1)
@@ -176,8 +193,7 @@ GameDough.Dough.prototype.update = function()
             delta = 1;
         }
         this.visual.tint = Phaser.Color.interpolateColor(0xFFFFFF, 0xFF3700, 100, 100 * delta);
-    }
-    
+    }    
     else
     {
         
@@ -241,9 +257,7 @@ GameDough.Dough.prototype.reset = function()
 //---------------------------------------------------------------------------------------
 // GH: Item Data
 //---------------------------------------------------------------------------------------
-var dicon = ['dough_barro', 'dough_bodoque', 'dough_caramelo', 'dough_grumosa', 'dough_legamo'];
-var gicon = ['gem_caramelo', 'gem_isotopo', 'gem_ojo', 'gem_piedra', 'gem_power'];
-var itemid = ["Barro","Caramelo", "Legamo", "Grumosa", "Ancestral", "Alambre", "HojasdeHierro", "DientesdeObsidiana", "CalzoncillosdeAcero", "EscamasdeDragon"];
+
 var Item = {};
 
 Item = function(game, xy, sprite, type)
@@ -340,6 +354,7 @@ GameScreen.BattleScreen.constructor = GameScreen.BattleScreen;
 
 GameScreen.BattleScreen.prototype.spawnItems = function()
 {  
+    // GH: Generate the items at random
     var megazord = [];
     for(var i = 0 ; i < 5; i++)
     {
@@ -347,7 +362,6 @@ GameScreen.BattleScreen.prototype.spawnItems = function()
         megazord[5 + i] = gicon[i];
     }
     
-    console.log("bullshit: " + megazord[6]);
     
    
     var rnd = this.game.rnd.integerInRange(0, 9);
@@ -360,8 +374,9 @@ GameScreen.BattleScreen.prototype.spawnItems = function()
 
 GameScreen.BattleScreen.prototype.update = function()
 {
-    
+    // GH: Clear stuff if we are not in this screen
     this.forEachAlive(function(obj){ obj.update(); obj.visible = this.game.gameScreen.atScreen === "battle" ? true : false; }, this);
+    // GH: Spawn items nonetheless
     if(this.itemDrop >= 3000)
     {
         var max = this.game.rnd.integerInRange(1, 3);
@@ -376,7 +391,7 @@ GameScreen.BattleScreen.prototype.update = function()
 GameScreen.GrillScreen = function(game)
 {
     Phaser.Group.call(this, game, game.world, 'GrillScreen', false, true, Phaser.Physics.ARCADE);
-    
+    // Gh: Background settings
     var bkg = game.make.sprite(0, game.world.height , 'grill_screen_bkg');
     this.add(bkg);
     this.bkg = bkg; 
@@ -392,9 +407,11 @@ GameScreen.GrillScreen = function(game)
     var i = 0;
     for(i = 0; i < this.dough.length ; i++)
     {
+        
+        // GH: Add the grills + the different visuals for them
         this.add(this.dough[i]);
-        this.add(this.dough[i].visual);
-        this.add(this.dough[i].gems);
+        this.add(this.dough[i].visual); // GH: Layer de masa
+        this.add(this.dough[i].gems);   // GH: Layer de piedras
         this.dough[i].visual.scale.setTo(0, 0);
         this.dough[i].visual.anchor.setTo(0.5, 0.5);
         this.dough[i].scale.setTo(0,0);
@@ -402,7 +419,6 @@ GameScreen.GrillScreen = function(game)
     }
     
     // GH: Create the different grills
-    // GH: Sword
     this.moldid = ['sword_mold', 'axe_mold', 'axe_mold_b'];
     this.molds = [];
     for(i = 0; i < this.moldid.length; i++)
@@ -428,17 +444,20 @@ GameScreen.GrillScreen.prototype.fillMold = function(type)
     
     if(this.dough[i].visual.scale.x <= 0)
     {
+        // GH: Change the mask for the dough
         var bmd =this.game.make.bitmapData(600, 256);
         bmd.alphaMask('mask_' + type, 'dough_grill');
-        this.dough[i].visual.loadTexture(bmd);// = game.make.sprite(xy.x +50 , xy.y + 130, bmd);
+        this.dough[i].visual.loadTexture(bmd);
     
     }
     else
     { 
+        // GH: change the mask for the gems
         this.dough[i].gems.loadTexture('mask_' + type);
         this.dough[i].gems.visible = true;
     }
-        
+
+    
     this.dough[i].visual.visible = true;
     var tween = this.game.add.tween(  this.dough[i].visual.scale);
     
@@ -493,11 +512,13 @@ GameScreen.GrillScreen.prototype.initWithMold = function(moldType)
     this.molds[currentGrill].visible = true;
 };
 
+// GH: Proxy functions that go straight to Dough
 GameScreen.GrillScreen.prototype.flipDough = function(id)
 {
     this.dough[id].onFlip();
 };
 
+// GH: Proxy functions that go straight to Dough
 GameScreen.GrillScreen.prototype.takeout = function(id)
 {
     this.dough[id].onTakeout();
@@ -552,12 +573,14 @@ GameScreen.GameScreen.prototype.onExitFinished = function()
     if(this.pendingScreen == "battle")
     {
         this.grillScreen.enabled = false;
+        
         this.game.add.tween(this.grillScreen.bkg.scale).to({x:1, y:0}, 100, Phaser.Easing.Linear.None).start();
         this.grillScreen.initWithMold("");
+        
         this.game.grillPick = -1;
+        
         this.grillScreen.checkDoughs();
         this.grillScreen.molds[currentGrill].visible = false;
-        
         this.game.tweenBkg(1);
     }   
     else
@@ -584,9 +607,13 @@ var Inventory = {};
 Inventory = function(game)
 {
     this.game   = game;
+    
+    // GH: Inventory, array of doughs, setup from here
     this.doughs = [{name:itemid[0], count:10}, {name:itemid[1], count:0}, {name:itemid[2], count:0}, {name:itemid[3], count:0}, {name:itemid[4], count:0}];
     
+    // GH: Inventory, array of gems, setup from here
     this.gems = [{name:itemid[5], count:10}, {name:itemid[6], count:0}, {name:itemid[7], count:0},{name:itemid[8], count:0}, {name:itemid[9], count:10}];
+    // GH: Add current swords being made here
     this.currentSword = [{a:'', ad:0 , b:'', bd: 0}, {a:'', ad:0 , b:'', bd: 0},{a:'', ad:0 , b:'', bd: 0},];
 };
 
@@ -624,22 +651,28 @@ Inventory.prototype =
         }
     },
   
+    // GH: Adds a sword to the queue
     addSword: function(obj)
     {
         var materials = this.currentSword[currentGrill];
+        // GH: Grab materials duration
         var d = materials.ad;
         var g = materials.bd;
-        
+        // GH: Final sword duration
         var finalDuration = g + d + obj.durability;    
         
         obj.durability = finalDuration;
+        // GH: Add the sword to the queue
         this.game.swordQueue.addSword(obj);   
     },
     
+    
+    // GH: Add an item from the battleground
     addItem : function(type)
     {
         var i = 0; 
         var key = null;
+        // GH: check for doughs
         for(i = 0; i < this.doughs.length ; i++)
         {
             if(this.doughs[i].name === type)
@@ -650,7 +683,7 @@ Inventory.prototype =
                 break;
             }
         }
-        
+        // GH: check for gems
         if(key === null)
         {
             for(i = 0; i < this.doughs.length ; i++)
@@ -750,6 +783,7 @@ SwordQueue = function(game)
     this.currentElapsed = 0;
     this.currentDelta = 0;
     
+    // GH: Initial sword setup
     this.addSword({durability:10, ingredients:'', type:'sword'});
 };
 
@@ -766,9 +800,11 @@ SwordQueue.prototype.addSword = function(obj)
     
 };
 
+
+// GH: LOSS CONDITION GOES HERE
 SwordQueue.prototype.update = function()
 {
-    //console.log("bullshitqueue: " +  this.sQueue[this.currentIndex].durability);
+    // GH: Advance sword usage here
     if((sQueue[currentIndex] !== undefined))
     {
         var curDur = sQueue[currentIndex].durability;
@@ -798,11 +834,11 @@ LifeBar = function(game)
     Phaser.Group.call(this, game, game.world, 'SwordQueue', false, true, Phaser.Physics.ARCADE);
     this.game = game;
     
-    this.redline = game.make.sprite(0, 0, 'lifebar_red');
+    this.redline = game.make.sprite(game.world.width * 0.15, 0, 'lifebar_red');
     this.add(this.redline);
-    this.greenline = game.make.sprite(85, 20, 'lifebar_green');
+    this.greenline = game.make.sprite(game.world.width * 0.15 + 85, 20, 'lifebar_green');
     this.add(this.greenline);
-    this.container = game.make.sprite(0, 0, 'lifebar_frame');
+    this.container = game.make.sprite(game.world.width * 0.15, 0, 'lifebar_frame');
     this.add(this.container);
     this.greenline.anchor.setTo(0, 0);
 };
@@ -893,9 +929,9 @@ BasicGame.Game.prototype = {
         this.load.image('sword_btn', 'assets/Up_Button.png');
         // GH: gems
         this.load.spritesheet('gems', 'assets/gems_test.png', 32, 32);
-        this.load.image('takeout', 'assets/icon_weaponready.png');
+        this.load.spritesheet('takeout', 'assets/icons_spritesheet_ready.png',128, 128);
         // GH: Flip 
-        this.load.image('flip', 'assets/icon_weaponflip.png');
+        this.load.spritesheet('flip', 'assets/icons_spritesheet_flip.png', 128, 128);
         
         // GH: FOKKEN MASKS dough
         this.load.image('mask_' + itemid[0], 'assets/masks/mask_dough_barro.png');
@@ -906,10 +942,10 @@ BasicGame.Game.prototype = {
         
         // GH: Fokken masks gem
         this.load.image('mask_' + itemid[5], 'assets/masks/mask_gem_caramelosdelimon.png');
-        this.load.image('mask_' + itemid[6], 'assets/masks/mask_gem_gemasdepoder.png');
-        this.load.image('mask_' + itemid[7], 'assets/masks/mask_gem_isotoposdepoder.png');
-        this.load.image('mask_' + itemid[8], 'assets/masks/mask_gem_ojosdegato.png');
-        this.load.image('mask_' + itemid[9], 'assets/masks/mask_gem_piedras.png');
+        this.load.image('mask_' + itemid[6], 'assets/masks/mask_gem_isotoposdepoder.png');
+        this.load.image('mask_' + itemid[7], 'assets/masks/mask_gem_ojosdegato.png');
+        this.load.image('mask_' + itemid[8], 'assets/masks/mask_gem_piedras.png');
+        this.load.image('mask_' + itemid[9], 'assets/masks/mask_gem_gemasdepoder.png');
                 
         // GH: Clock
         this.load.image('clock_canvas', 'assets/clock_canvas.png');
@@ -981,17 +1017,17 @@ BasicGame.Game.prototype = {
         this.add.group(this.gameScreen);
         this.lastGridId = ""; 
         // GH: ui buttons / battle
-        this.battleBtn = this.add.button(this.world.width * 0.68, 0, 'sword_btn', this.showBattleScreen, this);
+        this.battleBtn = this.add.button(this.world.width * 0.76, 0, 'sword_btn', this.showBattleScreen, this);
         // GH: Flip
-        this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'flip', this.flipDough, this);
-        this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'takeout', this.takeout, this);
+        this.flipButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'flip', this.flipDough, this, 2, 1, 0);
+        this.takeoutButton = this.add.button(this.world.width * 0.7, this.world.height * 0.23, 'takeout', this.takeout, this, 2, 1, 0);
         this.takeoutButton.visible = false;
         
         this.swordQueue = new SwordQueue(this);
         this.add.group(this.swordQueue);
         
-        this.add.sprite(this.world.width * 0.79,  this.world.height * 0, 'weaponstack_container' );
-        this.add.sprite(this.world.width * 0.83,  this.world.height * 0.05, 'weaponstack_icon' );
+        this.add.sprite(this.world.width * 0.87,  this.world.height * 0, 'weaponstack_container' );
+        this.add.sprite(this.world.width * 0.91,  this.world.height * 0.05, 'weaponstack_icon' );
         var style = { font: "32px Arial", fill: "#ffffff", wordWrap: true, wordWrapWidth: 200, align: "center", backgroundColor: "#000000"};
         this.stackText = this.add.text(this.world.width * 0.9,  this.world.height * 0, "0", style);
         
@@ -1016,7 +1052,7 @@ BasicGame.Game.prototype = {
         //  Here we're passing an array of image keys. It will pick one at random when emitting a new particle.
         this.emitter.makeParticles(['smoke_1', 'smoke_2', 'smoke_3']);
 
-        this.emitter.start(true, 1000, null, 20);
+       
     },
     
 
@@ -1024,6 +1060,7 @@ BasicGame.Game.prototype = {
     {
         // GH: set up the fucking doughs to be taken out
         this.gameScreen.grillScreen.takeout(currentGrill);
+         this.emitter.start(true, 1000, null, 20);
     },
     
     flipDough : function()
@@ -1084,19 +1121,20 @@ BasicGame.Game.prototype = {
     {
         this.inventory.useType(type);  
         this.add.tween(this.doughContainer.position).to({x:this.world.width , y:this.world.height  * 0.2}, 100, Phaser.Easing.Linear.None).start();
-        
-        console.log("TYPE PRE FILLIN: " + type);
+        this.doughContainer.killPrevious();
+    
         this.gameScreen.fillWithDough(type);
     },
     
     update: function()
     {
-        this.flipButton.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
+     
         if(this.gameScreen.atScreen !== "battle")
         {
             this.takeoutButton.visible = this.gameScreen.grillScreen.dough[currentGrill].readyToTakeout;
+            this.flipButton.visible = this.gameScreen.grillScreen.dough[currentGrill].state >= 2;
         }
-        
+       
         this.flipButton.InputEnabled = !this.takeoutButton.visible;
         
         this.battleBtn.visible = this.gameScreen.atScreen === "battle" ? false : true ; 
